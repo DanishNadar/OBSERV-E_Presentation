@@ -23,6 +23,10 @@ import { Scenario } from "./Scenario";
 import { Built } from "./Built";
 import { Toolchain } from "./Toolchain";
 import { Roadmap } from "./Roadmap";
+import { Horizons } from "./Horizons";
+import { MlCv } from "./MlCv";
+import { Edge } from "./Edge";
+import { Moonshots } from "./Moonshots";
 import { Closing } from "./Closing";
 
 export const acts = [
@@ -70,5 +74,9 @@ export const slides: SlideDef[] = [
   { id: "built", act: 8, title: "Where the build stands", component: Built, notes: "Filter by status. This slide exists so nobody leaves thinking the simulations are recorded results." },
   { id: "toolchain", act: 8, title: "Development workflow", component: Toolchain, notes: "Data to deployment. When recorded-walk benchmarks exist, put the numbers here." },
   { id: "roadmap", act: 9, title: "Limitations and next steps", component: Roadmap, notes: "Read the safety statement. Future work is labeled as future." },
+  { id: "horizons", act: 9, title: "Future prospects", component: Horizons, notes: "Three horizons: weeks, months, a year or more. Tags show whether each step is safety, ML, CV, product or proof. Nothing here is built yet. The two safety items come first: today a dropped Bluetooth link leaves the last motor speed running, and “help” on its own only reaches Normal in the weighted sum." },
+  { id: "mlcv", act: 9, title: "ML and CV prospects", component: MlCv, notes: "Left is learning, right is seeing. Name one model per line if asked: Whisper-class STT, an IMM filter, BoT-SORT/OSNet re-ID, YOLO-pose, YOLOE open-vocabulary prompts, Depth Anything V2. Every one is scored on recorded walks before it ships." },
+  { id: "edge", act: 9, title: "Competitive edge", component: Edge, notes: "Canes, wearables and apps watch the path; room cameras and companions watch one room. OBSERV-E keeps the person in view, so one robot can warn about a hazard and notice a fall. Competitor details are from public sources, not our own tests." },
+  { id: "moonshots", act: 9, title: "Moonshots", component: Moonshots, notes: "Bolder ideas that reuse what exists: the risk engine explains itself, the event store becomes a memory, the tracker reads gait, the whole head clips onto other wheels. Pick one or two to talk about, not all six." },
   { id: "closing", act: 9, title: "Closing", component: Closing, own3d: true, notes: "Return to the motif. Leave this up during questions; the robot can be dragged." },
 ];
