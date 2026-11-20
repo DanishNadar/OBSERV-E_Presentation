@@ -1,5 +1,6 @@
 import { useState, type CSSProperties } from "react";
 import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 import { colors } from "../theme";
 import { Kicker, Tilt } from "../components/ui";
 
@@ -42,6 +43,7 @@ export const Built = () => {
         <div>
           <Kicker act="VIII" color={colors.cyan}>Building it</Kicker>
           <h2 className="title" style={{ fontSize: 58, marginBottom: 0 }}>Where the build <span className="grad">stands today.</span></h2>
+          <a className="chip green tourLink" href="features.html#today">See today’s features as 3D scenes <ArrowRight size={20} /></a>
         </div>
         <div className="controlBar">
           {(["All", ...Object.keys(statusColor)] as ("All" | Status)[]).map((s) => (

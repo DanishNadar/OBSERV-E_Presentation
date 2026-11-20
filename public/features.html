@@ -1,0 +1,1607 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OBSERV-E Feature Tour</title>
+<meta name="description" content="OBSERV-E feature by feature: what the prototype does today, and the features planned next, each as an interactive 3D scene.">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: a "screening room". A large 3D stage plays one feature at a time, and the feature list sits beside it.
+   The stage is always dark, like a video player. The page around it follows the theme. */
+:root {
+  --bg: #04050d;
+  --glow-a: rgba(122, 68, 160, 0.26);
+  --glow-b: rgba(63, 224, 255, 0.10);
+  --surface: rgba(18, 22, 50, 0.62);
+  --surface-2: rgba(255, 255, 255, 0.04);
+  --fg: #eef3fa;
+  --dim: #a3b0c8;
+  --faint: #727f9c;
+  --line: rgba(190, 205, 255, 0.14);
+  --cyan: #3fe0ff;
+  --violet: #b27bff;
+  --magenta: #ff5fd2;
+  --amber: #ffb547;
+  --green: #34e0a1;
+  --red: #ff5a69;
+  --display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f3f4fa; --glow-a: rgba(122, 68, 160, 0.10); --glow-b: rgba(10, 143, 176, 0.07);
+    --surface: #ffffff; --surface-2: rgba(30, 40, 90, 0.05);
+    --fg: #121530; --dim: #475170; --faint: #6a7390; --line: rgba(30, 40, 90, 0.14);
+    --cyan: #0a7f9e; --violet: #7442cf; --magenta: #b8217f; --amber: #9a5a00; --green: #0b7d55; --red: #c4283a;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f3f4fa; --glow-a: rgba(122, 68, 160, 0.10); --glow-b: rgba(10, 143, 176, 0.07);
+  --surface: #ffffff; --surface-2: rgba(30, 40, 90, 0.05);
+  --fg: #121530; --dim: #475170; --faint: #6a7390; --line: rgba(30, 40, 90, 0.14);
+  --cyan: #0a7f9e; --violet: #7442cf; --magenta: #b8217f; --amber: #9a5a00; --green: #0b7d55; --red: #c4283a;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(1100px 600px at 8% -4%, var(--glow-a), transparent 60%),
+    radial-gradient(900px 600px at 100% 30%, var(--glow-b), transparent 60%),
+    var(--bg);
+  color: var(--fg);
+  font: 16px/1.55 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+.wrap {
+  max-width: 1240px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 44px 56px;
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 44px;
+}
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; letter-spacing: -0.02em; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); }
+
+/* Header */
+header { display: grid; gap: 16px; }
+.brand { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.brand b { font: 700 18px/1 var(--display); letter-spacing: 0.04em; }
+.badge { font: 500 12px/1 var(--mono); padding: 6px 10px; border-radius: 999px; border: 1px solid var(--magenta); color: var(--magenta); }
+h1 { font-size: clamp(36px, 6vw, 62px); line-height: 1.04; font-weight: 600; max-width: 18ch; }
+h1 .accent { color: var(--cyan); }
+.nb { white-space: nowrap; }
+.lede { font-size: clamp(17px, 2vw, 20px); color: var(--dim); max-width: 64ch; }
+.lede strong { color: var(--fg); font-weight: 600; }
+
+/* Jump links in the header */
+.jump { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.jump a { display: inline-flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); color: var(--fg); text-decoration: none; font-weight: 600; font-size: 15px; }
+.jump a:hover { border-color: var(--green); }
+.jump a.plan:hover { border-color: var(--magenta); }
+.jump a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.jn { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font: 600 12px/1 var(--mono); color: var(--green); background: color-mix(in srgb, var(--green) 16%, transparent); }
+.jump a.plan .jn { color: var(--magenta); background: color-mix(in srgb, var(--magenta) 16%, transparent); }
+.jc { font: 400 12px/1 var(--mono); color: var(--faint); }
+
+/* Two parts: what works today, then future prospects further down */
+.part { display: grid; gap: 22px; scroll-margin-top: 16px; }
+.partHead { display: grid; gap: 10px; }
+.partTag { justify-self: start; font: 500 12px/1.3 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; padding: 6px 11px; border-radius: 999px; color: var(--green); border: 1px solid color-mix(in srgb, var(--green) 55%, transparent); }
+.part h2 { font-size: clamp(28px, 4.2vw, 44px); font-weight: 600; }
+.partLede { color: var(--dim); font-size: 17px; max-width: 60ch; }
+.accToday { color: var(--green); }
+.accNext { color: var(--magenta); }
+.part .stage { border-color: color-mix(in srgb, var(--green) 32%, var(--line)); }
+.part.future { padding-top: 44px; border-top: 1px dashed color-mix(in srgb, var(--magenta) 50%, var(--line)); }
+.part.future .partTag { color: var(--magenta); border-color: color-mix(in srgb, var(--magenta) 55%, transparent); }
+.part.future .stage { border-color: color-mix(in srgb, var(--magenta) 36%, var(--line)); }
+
+/* Theatre */
+.theatre { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 24px; align-items: start; }
+.viewer { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0; }
+.stage {
+  position: relative; aspect-ratio: 16 / 9; border-radius: 18px; overflow: hidden;
+  background: #070a18; border: 1px solid var(--line);
+  touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none;
+}
+.stage.dragging { cursor: grabbing; }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.labels { position: absolute; inset: 0; pointer-events: none; }
+.lbl {
+  position: absolute; left: 0; top: 0; margin-top: -6px;
+  padding: 5px 9px; border-radius: 8px;
+  background: rgba(8, 11, 28, 0.86); border: 1px solid rgba(190, 205, 255, 0.24);
+  color: #eef3fa; font: 600 13px/1.25 var(--sans); white-space: nowrap;
+  pointer-events: none; will-change: transform;
+}
+.lbl.say, .lbl.you { white-space: normal; width: max-content; max-width: 260px; font-size: 14px; border-color: transparent; }
+.lbl.say { background: #eef3fa; color: #0b0f22; border-radius: 14px 14px 14px 4px; }
+.lbl.you { background: #ff9f5a; color: #1f1206; border-radius: 14px 14px 4px 14px; }
+.lbl.warn { border-color: #ffb547; color: #ffd08a; }
+.lbl.hl { border-color: #3fe0ff; color: #a9f1ff; background: rgba(6, 40, 56, 0.92); }
+.lbl.ok { border-color: #34e0a1; color: #a6f5d4; }
+.lbl.dim { color: #a3b0c8; font-weight: 500; }
+.lbl.note { font: 500 12px/1.25 var(--mono); border-color: rgba(63, 224, 255, 0.5); color: #cdeffd; }
+.lbl.off { border-color: #ff5a69; color: #ffb3ba; }
+.cap {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 30px 16px 14px;
+  display: flex; align-items: center; gap: 10px;
+  background: linear-gradient(transparent, rgba(4, 5, 13, 0.88));
+  color: #eef3fa; font: 600 17px/1.3 var(--display); pointer-events: none;
+}
+.capStep { flex: none; font: 500 12px/1 var(--mono); padding: 5px 8px; border-radius: 999px; border: 1px solid rgba(238, 243, 250, 0.35); color: #c9d3ea; }
+.hint { position: absolute; top: 12px; left: 14px; font: 500 12px/1 var(--mono); color: rgba(238, 243, 250, 0.62); pointer-events: none; transition: opacity 0.4s; }
+.speech { position: absolute; top: 12px; left: 12px; max-width: 46%; padding: 10px 14px; border-radius: 14px 14px 14px 4px; background: #eef3fa; color: #0b0f22; display: grid; gap: 2px; pointer-events: none; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); }
+.speech[hidden] { display: none; }
+.speech span { font: 500 10.5px/1.2 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: #0a7f9e; }
+.speech p { font: 600 16px/1.3 var(--display); }
+.fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: #a3b0c8; }
+.fallback[hidden] { display: none; }
+.card {
+  position: absolute; top: 14px; right: 14px; width: 252px; padding: 14px 16px; border-radius: 16px;
+  background: rgba(10, 14, 34, 0.93); border: 1px solid rgba(190, 205, 255, 0.22);
+  color: #eef3fa; display: grid; gap: 4px; pointer-events: none; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+.card[hidden] { display: none; }
+.cardTag { font: 500 10.5px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: #8994b0; }
+.cardTitle { font: 600 18px/1.2 var(--display); margin-top: 4px; }
+.cardSub { font-size: 12.5px; color: #a3b0c8; margin-bottom: 6px; }
+.cardLine { font-size: 13.5px; padding-left: 14px; position: relative; }
+.cardLine::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 6px; height: 6px; border-radius: 50%; background: #3fe0ff; }
+.cardLine.ok::before { background: #34e0a1; }
+.cardLine.warn::before { background: #ffb547; }
+
+.controls { display: flex; align-items: center; gap: 8px; }
+.ctl, .tourBtn {
+  height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface);
+  cursor: pointer; display: inline-grid; place-items: center;
+}
+.ctl { width: 44px; flex: none; }
+.ctl svg { width: 20px; height: 20px; }
+.ctl .st { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.ctl .fl { fill: currentColor; }
+.tourBtn { padding: 0 16px; font-weight: 600; font-size: 14.5px; flex: none; }
+.tourBtn[aria-pressed="true"] { border-color: var(--cyan); color: var(--cyan); }
+.ctl:hover, .tourBtn:hover { border-color: var(--cyan); }
+.ctl:focus-visible, .tourBtn:focus-visible, .feat:focus-visible, .scrub:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.scrub { flex: 1; min-width: 50px; accent-color: var(--cyan); height: 44px; margin: 0; }
+
+.info { display: grid; gap: 10px; padding: 20px 22px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); }
+.infoTop { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.theme { font: 500 12px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; }
+.count { font: 400 12px/1 var(--mono); color: var(--faint); margin-left: auto; }
+.info h3 { font-size: clamp(24px, 3vw, 32px); font-weight: 600; }
+.what { font-size: 17px; color: var(--fg); max-width: 66ch; }
+.why { display: grid; gap: 6px; padding-top: 12px; border-top: 1px solid var(--line); }
+.why p:last-child { color: var(--dim); max-width: 66ch; }
+
+.w { flex: none; font: 500 11px/1 var(--mono); padding: 5px 8px; border-radius: 6px; }
+.w0 { color: var(--green); background: color-mix(in srgb, var(--green) 14%, transparent); }
+.w1 { color: var(--amber); background: color-mix(in srgb, var(--amber) 14%, transparent); }
+.w2 { color: var(--magenta); background: color-mix(in srgb, var(--magenta) 14%, transparent); }
+.w3 { color: var(--cyan); background: color-mix(in srgb, var(--cyan) 14%, transparent); }
+.w4 { color: var(--violet); background: color-mix(in srgb, var(--violet) 14%, transparent); }
+.w5 { color: var(--amber); background: color-mix(in srgb, var(--amber) 14%, transparent); }
+
+.list { display: grid; gap: 18px; position: sticky; top: 16px; }
+.legend { font-size: 13px; color: var(--faint); display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.group { display: grid; gap: 4px; }
+.group h3 { font: 500 12px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--gc); margin: 0 0 6px 4px; }
+.feat {
+  width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  text-align: left; padding: 10px 12px; border-radius: 12px; border: 1px solid transparent; background: transparent;
+  font-size: 15px; font-weight: 500; line-height: 1.3; cursor: pointer;
+}
+.feat:hover { background: var(--surface-2); }
+.feat[aria-current="true"] { background: var(--surface); border-color: color-mix(in srgb, var(--gc) 60%, var(--line)); }
+.feat .num { font: 500 12px/1 var(--mono); color: var(--faint); }
+
+/* Stand-out strip */
+.edge { display: grid; gap: 16px; }
+.edge h2 { font-size: clamp(24px, 3vw, 32px); font-weight: 600; }
+.edgeRow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.ec { padding: 18px 20px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); display: grid; gap: 8px; align-content: start; }
+.ec p:last-child { font: 600 19px/1.3 var(--display); color: var(--dim); }
+.ec.us { border-color: color-mix(in srgb, var(--cyan) 50%, var(--line)); }
+.ec.us p:last-child { color: var(--fg); }
+.ec.us em { font-style: normal; color: var(--cyan); }
+
+footer { color: var(--faint); font-size: 13.5px; display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 20px; }
+
+@media (max-width: 980px) {
+  .theatre { grid-template-columns: minmax(0, 1fr); }
+  .list { position: static; }
+  .groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+}
+@media (max-width: 640px) {
+  .wrap { gap: 32px; padding-block: 28px 44px; }
+  .stage { aspect-ratio: 4 / 3.3; border-radius: 14px; }
+  .cap { font-size: 14px; padding: 22px 12px 10px; }
+  .lbl { font-size: 11px; padding: 3px 7px; }
+  .lbl.say, .lbl.you { font-size: 12px; max-width: 170px; }
+  .lbl.note { font-size: 10.5px; }
+  .speech { top: 8px; left: 8px; max-width: 62%; padding: 8px 10px; }
+  .speech p { font-size: 13.5px; }
+  .card { top: 8px; right: 8px; width: 60%; padding: 10px 12px; gap: 2px; }
+  .cardTitle { font-size: 15px; }
+  .cardSub { font-size: 11px; margin-bottom: 2px; }
+  .cardLine { font-size: 12px; }
+  .hint { font-size: 10.5px; }
+  .tourBtn { padding: 0 12px; font-size: 13.5px; }
+  .info { padding: 16px; }
+  .what { font-size: 16px; }
+  .groups { grid-template-columns: minmax(0, 1fr); }
+  .edgeRow { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hint { transition: none; }
+}
+.back { margin-left: auto; font-size: 14px; font-weight: 500; color: var(--dim); text-decoration: none; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); }
+.back:hover { color: var(--fg); border-color: var(--cyan); }
+.back:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><b>OBSERV-E</b><span class="badge">Hackathon prototype</span><a class="back" href="./">Back to the deck</a></div>
+    <h1><span class="nb">OBSERV-E</span>, <span class="accent">feature by feature</span></h1>
+    <p class="lede">Canes and phone apps watch the path. Home cameras watch one room. <strong>OBSERV-E watches you and the path</strong>, wherever you go. First, what the prototype does today. Scroll down for what comes next.</p>
+    <nav class="jump" aria-label="Parts of this page">
+      <a href="#today"><span class="jn">1</span>What it does today<span class="jc">9 features</span></a>
+      <a href="#next" class="plan"><span class="jn">2</span>Future prospects<span class="jc">10 features</span></a>
+    </nav>
+  </header>
+
+  <section class="part" id="today" aria-labelledby="today-h">
+    <div class="partHead">
+      <p class="partTag">Part 1 · In the prototype now</p>
+      <h2 id="today-h">What <span class="nb">OBSERV-E</span> does <span class="accToday">today</span></h2>
+      <p class="partLede">Nine features that already work in the prototype, each shown as a short 3D scene.</p>
+    </div>
+    <div class="theatre"></div>
+  </section>
+
+  <section class="part future" id="next" aria-labelledby="next-h">
+    <div class="partHead">
+      <p class="partTag">Part 2 · Future prospects · planned, not built yet</p>
+      <h2 id="next-h">Where <span class="nb">OBSERV-E</span> goes <span class="accNext">next</span></h2>
+      <p class="partLede">Ten features we plan to build on top of what works today.</p>
+    </div>
+    <div class="theatre"></div>
+  </section>
+
+  <section class="edge" aria-labelledby="edge-h">
+    <h2 id="edge-h">Why it stands out</h2>
+    <div class="edgeRow">
+      <div class="ec"><p class="eyebrow">Canes and phone apps</p><p>Watch the path, never the person.</p></div>
+      <div class="ec"><p class="eyebrow">Home cameras</p><p>Watch one room, and stay there.</p></div>
+      <div class="ec us"><p class="eyebrow">OBSERV-E</p><p>Watches you <em>and</em> the path, wherever you go.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Part 1 shows features in the prototype’s code today. They have not yet been measured on recorded walks or tested with users. Part 2 is planned, not built.</p>
+    <p>Every scene is an illustration, not recorded footage. Names, times and numbers in the scenes are examples.</p>
+    <p>OBSERV-E is an early prototype and should not be relied on for real-world navigation.</p>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+  const THEMES = [
+    { name: "Safety", color: "var(--red)" },
+    { name: "Getting around", color: "var(--cyan)" },
+    { name: "Care and reach", color: "var(--violet)" },
+    { name: "Keeps you in view", color: "var(--green)" },
+    { name: "Warns and checks in", color: "var(--amber)" },
+    { name: "Talks and moves", color: "var(--cyan)" },
+  ];
+  const TAGS = ["Soon", "Next", "Later", "Built", "Optional", "In progress"];
+  const C = { cyan: "#3fe0ff", red: "#ff5a69", amber: "#ffb547", green: "#34e0a1", warm: "#ffcf8a", you: "#ff9f5a" };
+
+  /* ---------- small math helpers ---------- */
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const seg = (x, a, b) => clamp((x - a) / (b - a));
+  const ease = (x) => x * x * (3 - 2 * x);
+  const mix = (a, b, f) => a + (b - a) * f;
+  const amix = (a, b, f) => a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * f;
+  const on = (x, a, b) => x >= a && x < b;
+  const pw = (x, k) => {
+    if (x <= k[0][0]) return k[0][1];
+    for (let i = 1; i < k.length; i++) if (x <= k[i][0]) return mix(k[i - 1][1], k[i][1], (x - k[i - 1][0]) / (k[i][0] - k[i - 1][0]));
+    return k[k.length - 1][1];
+  };
+  const moving = (f, x) => Math.abs(f(x + 0.04) - f(x)) > 0.004;
+  const right = (h) => ({ x: -Math.cos(h), z: Math.sin(h) });
+  function makePath(pts) {
+    const segs = []; let len = 0;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const [x0, z0] = pts[i], [x1, z1] = pts[i + 1], l = Math.hypot(x1 - x0, z1 - z0);
+      segs.push({ x0, z0, x1, z1, l, s0: len }); len += l;
+    }
+    // Extrapolates past both ends, so actors can stand before the start or after the finish.
+    const at = (s) => { let q = segs[0]; for (const c of segs) { q = c; if (s <= c.s0 + c.l) break; } const f = (s - q.s0) / q.l; return { x: mix(q.x0, q.x1, f), z: mix(q.z0, q.z1, f) }; };
+    const head = (s) => { const a = at(s - 0.3), b = at(s + 0.3); return Math.atan2(b.x - a.x, b.z - a.z); };
+    return { segs, len, at, head };
+  }
+
+  /* ---------- 3D building blocks (need THREE at call time) ---------- */
+  let snap = true, camera;
+  const M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.6, metalness: 0.05 }, o));
+  const G = (c, i = 1) => M(c, { emissive: c, emissiveIntensity: i });
+  const B = (c, op) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: op, depthWrite: false, side: THREE.DoubleSide });
+  const Box = (x, y, z) => new THREE.BoxGeometry(x, y, z);
+  const Cyl = (a, b, h, n = 16) => new THREE.CylinderGeometry(a, b, h, n);
+  const Sph = (r, a = 16, b = 12) => new THREE.SphereGeometry(r, a, b);
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const wpos = (o, dy = 0) => { const v = o.getWorldPosition(new THREE.Vector3()); v.y += dy; return v; };
+  function mk(geo, mat, parent, x = 0, y = 0, z = 0, cast = true) {
+    const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = cast; m.receiveShadow = true; parent.add(m); return m;
+  }
+
+  function person(g, color) {
+    const p = new THREE.Group(), body = new THREE.Group(); p.add(body); g.add(p);
+    const cloth = M(color), skin = M("#e2bf9a"), legM = M("#2b3150");
+    const legs = [], arms = [];
+    for (const s of [-1, 1]) {
+      const hip = new THREE.Group(); hip.position.set(0.1 * s, 0.9, 0); body.add(hip);
+      mk(Cyl(0.07, 0.055, 0.88, 10), legM, hip, 0, -0.44, 0); legs.push(hip);
+      const sh = new THREE.Group(); sh.position.set(0.24 * s, 1.47, 0); body.add(sh);
+      mk(Cyl(0.052, 0.045, 0.6, 10), cloth, sh, 0, -0.3, 0); arms.push(sh);
+    }
+    mk(Cyl(0.19, 0.15, 0.62, 16), cloth, body, 0, 1.2, 0);
+    mk(Sph(0.19), cloth, body, 0, 1.5, 0).scale.y = 0.42;
+    const head = mk(Sph(0.125, 20, 14), skin, body, 0, 1.69, 0);
+    p.userData = { body, legs, arms, head };
+    return p;
+  }
+  function pose(p, x, z, h, phase, amt) {
+    p.position.x = x; p.position.z = z; p.rotation.y = h;
+    const a = Math.sin(phase) * 0.55 * amt, u = p.userData;
+    u.legs[0].rotation.x = a; u.legs[1].rotation.x = -a;
+    u.arms[0].rotation.x = -a * 0.8; u.arms[1].rotation.x = a * 0.8;
+    u.body.position.y = Math.abs(Math.cos(phase)) * 0.025 * amt;
+    u.body.rotation.set(0, 0, 0);
+  }
+
+  function cameraHead(parent, shell, dark, acc) {
+    const head = new THREE.Group(); parent.add(head);
+    const tilt = new THREE.Group(); head.add(tilt);
+    mk(Box(0.17, 0.1, 0.12), shell, tilt);
+    mk(Cyl(0.038, 0.038, 0.03, 18), dark, tilt, 0, 0, 0.07).rotation.x = Math.PI / 2;
+    const lens = mk(Cyl(0.022, 0.022, 0.01, 16), acc, tilt, 0, 0, 0.087, false); lens.rotation.x = Math.PI / 2;
+    mk(Sph(0.014, 8, 6), acc, tilt, 0.06, 0.055, 0, false);
+    return { head, tilt, lens };
+  }
+  function robot(g) {
+    const r = new THREE.Group(); g.add(r);
+    const shell = M("#dfe6f5", { roughness: 0.35 }), dark = M("#1c2238", { roughness: 0.7 }), acc = G(C.cyan, 1.3), spoke = M("#8a93b3");
+    mk(Box(0.4, 0.13, 0.52), shell, r, 0, 0.15, 0);
+    mk(Box(0.3, 0.05, 0.38), dark, r, 0, 0.24, 0);
+    const wheels = [];
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      const w = mk(Cyl(0.085, 0.085, 0.07, 18), dark, r, 0.235 * sx, 0.085, 0.17 * sz); w.rotation.z = Math.PI / 2;
+      mk(Box(0.03, 0.074, 0.15), spoke, w); wheels.push(w);
+    }
+    const ring = mk(new THREE.TorusGeometry(0.29, 0.012, 8, 48), acc, r, 0, 0.15, 0, false); ring.rotation.x = Math.PI / 2; ring.scale.y = 1.3;
+    mk(Cyl(0.018, 0.018, 0.3, 10), dark, r, 0, 0.415, 0);
+    const h = cameraHead(r, shell, dark, acc); h.head.position.y = 0.58;
+    r.userData = { wheels, head: h.head, tilt: h.tilt, lens: h.lens, acc, lx: null, lz: null };
+    return r;
+  }
+  function drive(r, x, z, h) {
+    const u = r.userData;
+    if (u.lx !== null && !snap) {
+      const dx = x - u.lx, dz = z - u.lz, fwd = dx * Math.sin(h) + dz * Math.cos(h);
+      const d = Math.hypot(dx, dz) * (fwd >= 0 ? 1 : -1);
+      u.wheels.forEach((w) => { w.rotation.x += d / 0.085; });
+    }
+    u.lx = x; u.lz = z; r.position.x = x; r.position.z = z; r.rotation.y = h;
+  }
+  const tv = window.THREE ? new THREE.Vector3() : null, fv = window.THREE ? new THREE.Vector3() : null;
+  function aim(r, target, k) {
+    const u = r.userData; r.updateMatrixWorld();
+    tv.copy(target); r.worldToLocal(tv); tv.y -= u.head.position.y;
+    const yaw = Math.atan2(tv.x, tv.z), pitch = -Math.atan2(tv.y, Math.hypot(tv.x, tv.z));
+    u.head.rotation.y = amix(u.head.rotation.y, yaw, k);
+    u.tilt.rotation.x += (clamp(pitch, -0.9, 0.9) - u.tilt.rotation.x) * k;
+  }
+  function tone(r, cn, c) { r.userData.acc.color.set(c); r.userData.acc.emissive.set(c); if (cn) cn.material.color.set(c); }
+  function cone(g, c) {
+    const geo = new THREE.ConeGeometry(1, 1, 28, 1, true); geo.translate(0, -0.5, 0); geo.rotateX(-Math.PI / 2);
+    const m = new THREE.Mesh(geo, B(c, 0.13)); m.renderOrder = 3; g.add(m); return m;
+  }
+  function beam(cn, r, target, rad = 0.28, op = 0.13) {
+    r.userData.lens.getWorldPosition(fv);
+    cn.position.copy(fv); cn.lookAt(target);
+    cn.scale.set(rad, rad, Math.max(0.01, fv.distanceTo(target)));
+    cn.material.opacity = op; cn.visible = op > 0;
+  }
+  function pulse(g, c, inner = 0.86) {
+    const m = new THREE.Mesh(new THREE.RingGeometry(inner, 1, 64), B(c, 0.6)); m.rotation.x = -Math.PI / 2; m.renderOrder = 2; m.visible = false; g.add(m); return m;
+  }
+  function wave(m, x, y, z, f, size, opMax = 0.7) {
+    f = ((f % 1) + 1) % 1; m.visible = true; m.position.set(x, y, z);
+    const s = 0.15 + f * size; m.scale.set(s, s, s); m.material.opacity = (1 - f) * opMax;
+  }
+
+  function street(g) {
+    mk(Box(70, 0.02, 3.4), M("#283052", { roughness: 0.92 }), g, 0, 0.01, 0.4, false);
+    mk(Box(70, 0.01, 7), M("#12162a", { roughness: 0.95 }), g, 0, 0.005, -5.0, false);
+    mk(Box(70, 0.12, 0.14), M("#4a5478"), g, 0, 0.06, -1.32, false);
+    const dash = M("#c9d3ea", { roughness: 0.8 });
+    for (let x = -34; x < 35; x += 3) mk(Box(1.4, 0.012, 0.12), dash, g, x, 0.012, -5, false);
+    const post = M("#39405e"), bulb = G("#ffd9a0", 0.8);
+    for (let x = -12; x <= 18; x += 10) { mk(Cyl(0.05, 0.06, 3.2, 10), post, g, x, 1.6, -1.6); mk(Sph(0.14, 12, 8), bulb, g, x, 3.25, -1.6, false); }
+  }
+  function plaza(g) {
+    mk(Box(44, 0.02, 22), M("#1f2643", { roughness: 0.92 }), g, 0, 0.01, 0, false);
+    const pot = M("#3a4268"), leaf = M("#2f6f5c", { roughness: 0.8 });
+    [[-6.5, -4], [6.5, -4.5], [10.5, 3.6], [-7.5, 4.2], [2, -6.5]].forEach(([x, z]) => {
+      mk(Cyl(0.55, 0.65, 0.5, 18), pot, g, x, 0.25, z); mk(Sph(0.62, 14, 10), leaf, g, x, 0.85, z);
+    });
+  }
+  function ambulance(g) {
+    const a = new THREE.Group(); g.add(a);
+    const white = M("#e9eef8", { roughness: 0.4 }), red = M("#ff5a69"), dark = M("#1b2036"), glass = M("#24304f", { roughness: 0.2, metalness: 0.3 });
+    mk(Box(1.9, 1.6, 3.6), white, a, 0, 1.1, -0.4);
+    mk(Box(1.9, 1.0, 1.4), white, a, 0, 0.8, 2.0);
+    mk(Box(1.94, 0.2, 3.64), red, a, 0, 0.95, -0.4, false);
+    mk(Box(1.7, 0.45, 0.05), glass, a, 0, 1.05, 2.71, false);
+    const wheels = [];
+    for (const sx of [-1, 1]) for (const z of [-1.5, 1.6]) { const w = mk(Cyl(0.36, 0.36, 0.26, 18), dark, a, 0.88 * sx, 0.36, z); w.rotation.z = Math.PI / 2; wheels.push(w); }
+    const lr = mk(Box(0.55, 0.14, 0.28), G(C.red, 2), a, -0.4, 1.97, 1.2, false);
+    const lb = mk(Box(0.55, 0.14, 0.28), G("#4f8bff", 2), a, 0.4, 1.97, 1.2, false);
+    a.userData = { lr, lb, wheels };
+    return a;
+  }
+  function bike(g, color, rider) {
+    const b = new THREE.Group(); g.add(b);
+    const frame = M(color), dark = M("#151a2e");
+    const wheels = [];
+    for (const z of [-0.52, 0.52]) { const w = mk(new THREE.TorusGeometry(0.33, 0.035, 8, 28), dark, b, 0, 0.35, z); w.rotation.y = Math.PI / 2; wheels.push(w); }
+    mk(Box(0.05, 0.05, 0.8), frame, b, 0, 0.72, 0.05);
+    mk(Box(0.05, 0.05, 0.8), frame, b, 0, 0.52, 0.05).rotation.x = 0.5;
+    mk(Box(0.05, 0.45, 0.05), frame, b, 0, 0.6, -0.3);
+    mk(Box(0.05, 0.5, 0.05), frame, b, 0, 0.6, 0.48).rotation.x = -0.25;
+    mk(Box(0.5, 0.04, 0.04), dark, b, 0, 0.88, 0.42);
+    mk(Box(0.12, 0.05, 0.22), dark, b, 0, 0.84, -0.32);
+    if (rider) {
+      const p = person(b, "#5fb4ff"); p.position.set(0, -0.06, -0.3);
+      const u = p.userData; u.body.rotation.x = 0.35;
+      u.legs.forEach((l) => { l.rotation.x = -0.9; }); u.arms.forEach((a) => { a.rotation.x = -1.0; });
+    }
+    b.userData = { wheels };
+    return b;
+  }
+  function smartHead(g) {
+    const u = new THREE.Group(); g.add(u);
+    const shell = M("#dfe6f5", { roughness: 0.35 }), dark = M("#1c2238"), acc = G(C.cyan, 1.3);
+    mk(Box(0.14, 0.07, 0.12), dark, u, 0, 0.035, 0);
+    mk(Cyl(0.016, 0.016, 0.22, 10), dark, u, 0, 0.18, 0);
+    mk(new THREE.TorusGeometry(0.06, 0.01, 8, 28), acc, u, 0, 0.1, 0, false).rotation.x = Math.PI / 2;
+    const h = cameraHead(u, shell, dark, acc); h.head.position.y = 0.32;
+    u.userData = { head: h.head };
+    return u;
+  }
+  function walkerModel(g) {
+    const w = new THREE.Group(); g.add(w);
+    const m = M("#b9c3dc", { metalness: 0.4, roughness: 0.35 }), dark = M("#151a2e");
+    for (const sx of [-1, 1]) {
+      for (const sz of [-1, 1]) mk(Cyl(0.018, 0.018, 0.84, 10), m, w, 0.28 * sx, 0.46, 0.22 * sz);
+      mk(Box(0.04, 0.04, 0.5), m, w, 0.28 * sx, 0.86, 0);
+      mk(Box(0.05, 0.05, 0.14), dark, w, 0.28 * sx, 0.89, -0.17);
+      mk(Cyl(0.05, 0.05, 0.03, 12), dark, w, 0.28 * sx, 0.05, 0.22).rotation.z = Math.PI / 2;
+    }
+    mk(Box(0.6, 0.035, 0.035), m, w, 0, 0.86, 0.22);
+    return w;
+  }
+  function chairModel(g) {
+    const c = new THREE.Group(); g.add(c);
+    const frame = M("#b9c3dc", { metalness: 0.45, roughness: 0.35 }), seat = M("#3a4472"), dark = M("#151a2e");
+    mk(Box(0.48, 0.06, 0.44), seat, c, 0, 0.5, 0);
+    mk(Box(0.48, 0.48, 0.05), seat, c, 0, 0.78, -0.22);
+    for (const s of [-1, 1]) {
+      const w = mk(new THREE.TorusGeometry(0.29, 0.028, 10, 36), dark, c, 0.3 * s, 0.31, -0.05); w.rotation.y = Math.PI / 2;
+      mk(Cyl(0.06, 0.06, 0.035, 14), dark, c, 0.2 * s, 0.06, 0.26).rotation.z = Math.PI / 2;
+      mk(Box(0.04, 0.035, 0.36), frame, c, 0.27 * s, 0.7, 0);
+      mk(Box(0.025, 0.22, 0.025), frame, c, 0.27 * s, 0.6, 0.15);
+      mk(Box(0.025, 0.42, 0.025), frame, c, 0.22 * s, 0.27, 0.2);
+      mk(Box(0.1, 0.02, 0.16), frame, c, 0.12 * s, 0.1, 0.32);
+    }
+    return c;
+  }
+  function cartModel(g) {
+    const c = new THREE.Group(); g.add(c);
+    const frame = M("#b9c3dc", { metalness: 0.5, roughness: 0.3 }), dark = M("#151a2e");
+    const basket = new THREE.LineSegments(new THREE.EdgesGeometry(Box(0.55, 0.42, 0.78)), new THREE.LineBasicMaterial({ color: "#c9d3ea" }));
+    basket.position.set(0, 0.8, 0); c.add(basket);
+    mk(Box(0.55, 0.42, 0.78), B("#c9d3ea", 0.1), c, 0, 0.8, 0, false);
+    mk(Box(0.5, 0.02, 0.72), frame, c, 0, 0.6, 0);
+    mk(Cyl(0.02, 0.02, 0.62, 10), M("#ff8a3d"), c, 0, 1.03, -0.46).rotation.z = Math.PI / 2;
+    for (const s of [-1, 1]) {
+      mk(Box(0.02, 0.24, 0.02), frame, c, 0.27 * s, 0.92, -0.42);
+      for (const z of [-0.33, 0.33]) {
+        mk(Box(0.025, 0.55, 0.025), frame, c, 0.24 * s, 0.32, z);
+        mk(Cyl(0.05, 0.05, 0.03, 12), dark, c, 0.24 * s, 0.05, z).rotation.z = Math.PI / 2;
+      }
+    }
+    return c;
+  }
+
+  /* ---------- extra pieces for the "works today" scenes ---------- */
+  // A detection box that always faces the viewer. corners=true draws only corner brackets (a guess, not a sighting).
+  function frame(g, c, w, h, corners) {
+    const f = new THREE.Group(), mat = B(c, 0.95); mat.depthTest = false; g.add(f);
+    const bar = (x, y, bw, bh) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(bw, bh), mat); m.position.set(x, y, 0); m.renderOrder = 6; f.add(m); };
+    const th = 0.03, w2 = w / 2, h2 = h / 2;
+    if (!corners) { bar(0, h2, w + th, th); bar(0, -h2, w + th, th); bar(-w2, 0, th, h); bar(w2, 0, th, h); }
+    else {
+      const a = Math.min(w, h) * 0.3;
+      for (const sx of [-1, 1]) for (const sy of [-1, 1]) { bar(sx * (w2 - a / 2), sy * h2, a, th); bar(sx * w2, sy * (h2 - a / 2), th, a); }
+    }
+    f.userData.mat = mat; f.visible = false; return f;
+  }
+  function place(f, x, y, z, op) {
+    f.visible = op > 0.01; if (!f.visible) return;
+    f.position.set(x, y, z); f.quaternion.copy(camera.quaternion); f.userData.mat.opacity = op;
+  }
+  function ghost(p, c) {
+    const mats = new Set();
+    p.traverse((o) => { if (o.isMesh) { o.castShadow = false; mats.add(o.material); } });
+    mats.forEach((m) => { m.color.set(c); m.emissive.set(c); m.emissiveIntensity = 0.5; m.transparent = true; m.depthWrite = false; });
+    return (op) => { p.visible = op > 0.01; mats.forEach((m) => { m.opacity = op; }); };
+  }
+  function car(g, color) {
+    const a = new THREE.Group(); g.add(a);
+    const body = M(color, { roughness: 0.35, metalness: 0.25 }), dark = M("#1b2036"), glass = M("#24304f", { roughness: 0.2, metalness: 0.3 });
+    mk(Box(1.8, 0.6, 4.0), body, a, 0, 0.62, 0);
+    mk(Box(1.56, 0.5, 2.0), glass, a, 0, 1.15, -0.25);
+    mk(Box(1.6, 0.07, 1.9), body, a, 0, 1.42, -0.25);
+    for (const sx of [-1, 1]) mk(Box(0.34, 0.12, 0.04), G("#fff3c4", 1.6), a, 0.6 * sx, 0.7, 2.01, false);
+    const wheels = [];
+    for (const sx of [-1, 1]) for (const z of [-1.3, 1.3]) { const w = mk(Cyl(0.34, 0.34, 0.24, 18), dark, a, 0.86 * sx, 0.34, z); w.rotation.z = Math.PI / 2; wheels.push(w); }
+    a.userData = { wheels };
+    return a;
+  }
+  function seat(g) {
+    const c = new THREE.Group(); g.add(c);
+    const wood = M("#a0764f", { emissive: C.amber, emissiveIntensity: 0 });
+    mk(Box(0.46, 0.05, 0.46), wood, c, 0, 0.46, 0);
+    mk(Box(0.46, 0.46, 0.04), wood, c, 0, 0.72, -0.21);
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) mk(Box(0.04, 0.46, 0.04), wood, c, 0.2 * sx, 0.23, 0.2 * sz);
+    c.userData.mat = wood; return c;
+  }
+  function bench(g) {
+    const b = new THREE.Group(); g.add(b);
+    const wood = M("#7a5a3e"), metal = M("#39405e");
+    mk(Box(1.6, 0.06, 0.42), wood, b, 0, 0.45, 0);
+    mk(Box(1.6, 0.3, 0.05), wood, b, 0, 0.7, -0.2);
+    for (const sx of [-1, 1]) mk(Box(0.06, 0.45, 0.4), metal, b, 0.7 * sx, 0.225, 0);
+    return b;
+  }
+
+  /* ---------- overlay helpers, called from inside scenes ---------- */
+  let ctx = null; // the player whose scene is updating right now
+  function L(id, text, pos, tone = "") {
+    if (tone === "say") { ctx.sayText = text; return; }
+    ctx.touched.add(id);
+    let el = ctx.labelMap.get(id);
+    if (!el) { el = document.createElement("div"); ctx.labelsEl.appendChild(el); ctx.labelMap.set(id, el); el._text = null; el._tone = null; }
+    if (el._text !== text) { el.textContent = text; el._text = text; }
+    if (el._tone !== tone) { el.className = "lbl " + tone; el._tone = tone; }
+    el._pos = pos;
+  }
+  const card = (html) => { ctx.cardHtml = html; };
+  const callCard = (t) => {
+    const secs = Math.floor(Math.max(0, t - 7.6));
+    return '<p class="cardTag">Example</p><p class="cardTitle">Calling Sam</p><p class="cardSub">Family contact · 0:' + String(secs).padStart(2, "0") +
+      '</p><p class="cardLine">Location shared</p><p class="cardLine">“I fell and I’m not answering”</p>' +
+      (t >= 10.2 ? '<p class="cardLine ok">Sam: “On my way.”</p>' : "");
+  };
+  const REPORT = '<p class="cardTag">Example</p><p class="cardTitle">Weekly update</p><p class="cardSub">To Sam · Sunday, 6 pm</p>' +
+    '<p class="cardLine">Walked 9.4 km, more than last week</p><p class="cardLine ok">Steadier on turns</p><p class="cardLine warn">1 close call (a bike), handled</p>';
+  const PAGER = '<p class="cardTag">Example</p><p class="cardTitle">Room 12 · 2:14 am</p><p class="cardSub">Night staff pager</p>' +
+    '<p class="cardLine warn">Resident is up and walking</p><p class="cardLine ok">Robot is with them, lights on</p>';
+
+  /* ---------- part 1: nine features in the prototype today ---------- */
+  const TODAY = [
+    {
+      theme: 3, when: 3, title: "Finds you and keeps track of you",
+      what: "It spots the people around it, picks out the one it’s helping, and keeps track of you as you walk, even with others nearby.",
+      why: "Every warning starts here. It can only look out for you if it knows which person is you.",
+      dur: 11, poster: 6.4,
+      beats: [[0, "Three people in front of it"], [1, "It finds every person"], [2.4, "It picks you: the one right in front"], [3.8, "You walk, and it keeps track of you"], [8.4, "Others nearby don’t confuse it"]],
+      cam: { p: [-3.8, 3.6, 5.4], l: [0.8, 0.7, -0.4] },
+      build(g) {
+        plaza(g);
+        const rb = robot(g), cn = cone(g, C.cyan), you = person(g, C.you), a = person(g, "#7b86a6"), b = person(g, "#9a7fb0");
+        const fy = frame(g, "#ffffff", 0.8, 1.95), fl = frame(g, C.cyan, 0.8, 1.95), fa = frame(g, "#ffffff", 0.8, 1.95), fb = frame(g, "#ffffff", 0.8, 1.95);
+        const ring = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.5, 48), B(C.cyan, 0.85)); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03; g.add(ring);
+        const P = makePath([[0.6, 0.5], [2.4, 0.3], [3.3, -1.0], [2.6, -2.5]]);
+        const sAt = (t) => P.len * ease(seg(t, 3.6, 9.4));
+        return (t, k) => {
+          const s = sAt(t), p = P.at(s);
+          pose(you, p.x, p.z, amix(-Math.PI / 2, P.head(s), ease(seg(t, 3.2, 3.8))), s * 4.6, moving(sAt, t) ? 1 : 0);
+          pose(a, 2.2, 1.7, -2.2, 0, 0);
+          const bx = 6.2 - 0.6 * t; pose(b, bx, -3.2, -Math.PI / 2, bx * 4.6, 1);
+          drive(rb, -2.6, 0.4, Math.PI / 2);
+          const found = seg(t, 0.9, 1.4), lock = ease(seg(t, 2.4, 2.9));
+          const tg = t < 1.4 ? V(1.6, 1.1, mix(2.4, -3.2, ease(seg(t, 0, 1.4)))) : wpos(you.userData.head);
+          aim(rb, tg, k); tone(rb, cn, C.cyan); beam(cn, rb, tg, t < 1.4 ? 0.55 : 0.28, 0.12);
+          place(fy, p.x, 0.98, p.z, found * (1 - lock) * 0.9);
+          place(fl, p.x, 0.98, p.z, lock);
+          place(fa, 2.2, 0.98, 1.7, found * (1 - 0.65 * lock) * 0.9);
+          place(fb, bx, 0.98, -3.2, found * (1 - 0.65 * lock) * 0.9);
+          ring.position.x = p.x; ring.position.z = p.z; ring.material.opacity = 0.85 * lock; ring.visible = lock > 0.01;
+          if (on(t, 1.2, 2.4)) { L("pa", "Person", V(2.2, 2.2, 1.7), "dim"); L("pb", "Person", V(bx, 2.2, -3.2), "dim"); L("py", "Person", V(p.x, 2.2, p.z), "dim"); }
+          if (t >= 2.4) L("you", t < 3.8 ? "You: right in front" : "You · tracked", V(p.x, 2.2, p.z), "ok");
+          if (t >= 8.4) { L("pa", "Someone else", V(2.2, 2.2, 1.7), "dim"); L("pb", "Someone else", V(bx, 2.2, -3.2), "dim"); }
+        };
+      },
+    },
+    {
+      theme: 3, when: 3, title: "Looks a step ahead of you",
+      what: "It guesses where you’ll be a moment from now, so it keeps up with you instead of trailing behind.",
+      why: "Its camera can turn early instead of late, and it knows which way you’re heading.",
+      dur: 10, poster: 3.4,
+      beats: [[0, "You walk past"], [1.4, "It guesses where you’ll be in a moment"], [4.4, "You turn, and the guess catches up"], [7.4, "Its camera aims where you’re going"]],
+      cam: { p: [-1.0, 5.2, 6.4], l: [0.4, 0.4, -0.6] },
+      build(g) {
+        plaza(g);
+        const rb = robot(g), cn = cone(g, C.cyan), you = person(g, C.you), gh = person(g, C.cyan), fade = ghost(gh, C.cyan);
+        const dotM = B(C.cyan, 0.9), dots = [];
+        for (let i = 0; i < 6; i++) dots.push(mk(Sph(0.05, 8, 6), dotM, g, 0, 0.06, 0, false));
+        const P = makePath([[-3.6, 0.6], [0.4, 0.6], [2.2, -0.6], [2.6, -2.9]]);
+        const sAt = (t) => P.len * ease(seg(t, 0.2, 9.2)), lead = 0.9;
+        return (t, k) => {
+          const s = sAt(t), p = P.at(s), q = P.at(sAt(t + 0.05));
+          const vx = (q.x - p.x) / 0.05, vz = (q.z - p.z) / 0.05, gx = p.x + vx * lead, gz = p.z + vz * lead;
+          pose(you, p.x, p.z, P.head(s), s * 4.6, moving(sAt, t) ? 1 : 0);
+          const gop = clamp((Math.hypot(vx, vz) - 0.2) * 2) * seg(t, 1.2, 1.8);
+          fade(0.32 * gop);
+          pose(gh, gx, gz, Math.atan2(vx, vz), s * 4.6, 1);
+          dots.forEach((d, i) => { const f = (i + 1) / 7; d.position.set(p.x + vx * lead * f, 0.06, p.z + vz * lead * f); d.visible = gop > 0.05; });
+          drive(rb, -0.8, -2.6, 0.4);
+          const tg = gop > 0.2 ? wpos(gh.userData.head) : wpos(you.userData.head);
+          aim(rb, tg, k); tone(rb, cn, C.cyan); beam(cn, rb, tg, 0.28, 0.12);
+          if (gop > 0.3) L("next", t < 7.4 ? "You, in a moment" : "Camera aims here", wpos(gh.userData.head, 0.32), "hl");
+        };
+      },
+    },
+    {
+      theme: 3, when: 3, title: "Doesn’t lose you behind things",
+      what: "If you step behind a pillar, it keeps guessing where you are. If you’re gone too long, it tells you, and it says so when it sees you again.",
+      why: "You always know whether it can see you, so you’re never on your own without knowing it.",
+      dur: 12.5, poster: 3.4,
+      beats: [[0, "Walking past a pillar"], [2.6, "Out of sight: it keeps guessing where you are"], [4.4, "Hidden too long: it tells you"], [9.4, "You step back out"], [9.7, "It lets you know it sees you again"]],
+      cam: { p: [-2.0, 4.6, 6.4], l: [-0.4, 0.6, 0.2] },
+      build(g) {
+        plaza(g);
+        mk(Cyl(0.45, 0.45, 3.2, 28), M("#59628a", { roughness: 0.8 }), g, -0.8, 1.6, 0);
+        const rb = robot(g), cn = cone(g, C.cyan), you = person(g, C.you);
+        const fs = frame(g, C.cyan, 0.8, 1.95), fg = frame(g, C.amber, 0.8, 1.95, true);
+        const sAt = (t) => pw(t, [[0.4, 0], [3.2, 3.2], [8.8, 3.2], [11.6, 6.2]]);
+        const zAt = (t) => 3.2 - sAt(t), vz = -3.2 / 2.8;
+        // When the pillar fully hides you from the robot's camera
+        let tHide = 0, tSeen = 0;
+        for (let x = 0; x < 12.5; x += 0.01) { const hid = Math.abs(zAt(x)) < 0.7; if (!tHide && hid) tHide = x; if (tHide && !tSeen && !hid) tSeen = x; }
+        return (t, k) => {
+          const z = zAt(t), hidden = t >= tHide && t < tSeen;
+          pose(you, 1.4, z, Math.PI, sAt(t) * 4.6, moving(sAt, t) ? 1 : 0);
+          drive(rb, -3.4, 0, Math.PI / 2);
+          const gz = zAt(tHide) + vz * (t - tHide), gop = hidden ? 1 - seg(t, tHide + 0.9, tHide + 1.8) : 0;
+          place(fs, 1.4, 0.98, z, hidden ? 0 : 0.95);
+          place(fg, 1.4, 0.98, gz, gop * 0.95);
+          const lost = hidden && t >= tHide + 1.8;
+          const tg = !hidden ? wpos(you.userData.head) : !lost ? V(1.4, 1.5, gz) : V(1.4, 1.2, 1.8 * Math.sin((t - tHide - 1.8) * 1.3));
+          aim(rb, tg, k); tone(rb, cn, hidden ? C.amber : C.cyan); beam(cn, rb, tg, 0.28, 0.12);
+          if (!hidden) L("you", "You", wpos(you.userData.head, 0.32), "ok");
+          if (gop > 0.05) L("guess", "Best guess", V(1.4, 2.2, gz), "warn");
+          if (lost) L("srch", "Looking for you", wpos(rb.userData.head, 0.35), "note");
+          if (on(t, tHide + 1.9, tHide + 5.2)) L("say", "“I lost sight of you for a moment. Please step back into view or say here.”", null, "say");
+          if (on(t, tSeen + 0.15, tSeen + 2.6)) L("say", "“I see you again. I am back with you.”", null, "say");
+        };
+      },
+    },
+    {
+      theme: 4, when: 3, title: "Warns about traffic from the side",
+      what: "When a car or bike comes toward you from the side, it gives a short warning that names the side. When it has gone, it tells you that too.",
+      why: "Side traffic is the hardest to notice. A short warning that names the side leaves time to react.",
+      dur: 11, poster: 4.4,
+      beats: [[0, "Walking up to the road"], [2.6, "A car, coming from the left"], [3.6, "A short warning that names the side"], [5.4, "It passes"], [7.4, "It tells you when it’s gone"]],
+      cam: { p: [3.8, 3.0, 4.2], l: [-1.6, 0.7, -2.4] },
+      build(g) {
+        street(g);
+        const you = person(g, C.you), rb = robot(g), cn = cone(g, C.cyan), cr = car(g, "#4f8bff"), fc = frame(g, C.amber, 4.4, 1.75);
+        cr.rotation.y = Math.PI / 2;
+        const sAt = (t) => pw(t, [[0, 0], [2.4, 2.75]]);
+        return (t, k) => {
+          const s = sAt(t), z = 1.8 - s;
+          pose(you, 0, z, Math.PI, s * 4.6, moving(sAt, t) ? 1 : 0);
+          drive(rb, 0.72, z - 0.15, Math.PI);
+          const cx = -24 + 5.2 * (t - 0.6);
+          cr.position.set(cx, 0, -3.3); cr.userData.wheels.forEach((w) => { w.rotation.x = cx / 0.34; });
+          const seen = on(t, 2.6, 6.6);
+          place(fc, cx, 0.9, -3.3, seen ? 0.9 : 0);
+          const tg = seen ? V(cx, 0.9, -3.3) : wpos(you.userData.head);
+          aim(rb, tg, k); tone(rb, cn, on(t, 2.6, 7.0) ? C.amber : C.cyan); beam(cn, rb, tg, seen ? 0.6 : 0.28, seen ? 0.09 : 0.12);
+          if (seen) L("car", t < 5.0 ? "Car · on your left" : "Car · passing", V(cx, 2.15, -3.3), "warn");
+          if (on(t, 3.6, 6.0)) L("say", "“Car approaching from your left.”", null, "say");
+          if (on(t, 7.4, 9.8)) L("say", "“Okay, that immediate obstacle is no longer in your path.”", null, "say");
+        };
+      },
+    },
+    {
+      theme: 4, when: 3, title: "Flags what’s in your way, without chatter",
+      what: "It warns you once about something in your path. If nothing changes, it stays quiet, and it tells you when the way is clear.",
+      why: "A robot that talks all the time gets tuned out. Speaking only when something changes keeps every warning worth hearing.",
+      dur: 12, poster: 4.8,
+      beats: [[0, "Walking across the square"], [1.4, "A chair in your path: one warning"], [3.6, "You go around it. Nothing new, so it stays quiet"], [7, "Then: the way is clear"], [9.4, "It saw a lot, and said little"]],
+      cam: { p: [-1.8, 5.0, 4.6], l: [1.2, 0.3, -0.3] },
+      build(g) {
+        plaza(g);
+        const ch = seat(g); ch.position.set(1.0, 0, 0); ch.rotation.y = -Math.PI / 2;
+        const bn = bench(g); bn.position.set(3.8, 0, -1.8);
+        const you = person(g, C.you), rb = robot(g), cn = cone(g, C.cyan), fc = frame(g, C.amber, 0.75, 1.1);
+        const P = makePath([[-3.4, 0], [-0.6, 0], [0.2, 0.9], [1.8, 0.9], [2.6, 0], [4.8, 0]]);
+        const sAt = (t) => pw(t, [[0, 0], [2.3, 2.8], [3.6, 2.8], [10.6, P.len]]);
+        const SUM = '<p class="cardTag">Example</p><p class="cardTitle">This walk</p><p class="cardSub">What it saw, and what it said</p>' +
+          '<p class="cardLine">Saw 7 things: a chair, a bench, 5 plant pots</p><p class="cardLine ok">Spoke twice: the chair, then “clear”</p>';
+        return (t, k) => {
+          const s = sAt(t), p = P.at(s);
+          pose(you, p.x, p.z, P.head(s), s * 4.6, moving(sAt, t) ? 1 : 0);
+          drive(rb, p.x + 1.2, -0.85, Math.PI / 2);
+          const warn = on(t, 1.4, 3.6), still = on(t, 3.6, 6.4);
+          ch.userData.mat.emissiveIntensity = warn ? 0.35 + 0.2 * Math.sin(t * 7) : 0;
+          place(fc, 1.0, 0.56, 0, warn ? 0.9 : still ? 0.3 : 0);
+          const tg = warn ? V(1.0, 0.5, 0) : wpos(you.userData.head);
+          aim(rb, tg, k); tone(rb, cn, warn ? C.amber : C.cyan); beam(cn, rb, tg, warn ? 0.4 : 0.28, 0.12);
+          if (warn) { L("ch", "Chair · in your path", V(1.0, 1.35, 0), "warn"); L("say", "“Obstacle ahead. Chair in your path.”", null, "say"); }
+          if (still) L("ch", "Same chair, nothing new: stays quiet", V(1.0, 2.2, 0), "note");
+          if (on(t, 4.4, 6.8)) L("bn", "Bench · not in your way", V(3.8, 1.1, -1.8), "dim");
+          if (on(t, 7.0, 9.2)) L("say", "“Okay, that immediate obstacle is no longer in your path.”", null, "say");
+          if (t >= 9.4) card(SUM);
+        };
+      },
+    },
+    {
+      theme: 4, when: 3, title: "Checks in when warning signs add up",
+      what: "It watches for warning signs: a fall, not moving, traffic close by. When enough add up, it asks if you’re okay. Say “I am okay” and it stands down. If you stay silent, it moves on to contact someone you trust (in the prototype that step is logged, not yet a real call).",
+      why: "It asks before it acts, so a stumble you’ve recovered from doesn’t turn into an alarm.",
+      dur: 13, poster: 5.6,
+      beats: [[0, "Walking together"], [2.6, "A fall: one warning sign"], [3.5, "Not moving, a car close by: the signs add up"], [4.2, "It checks: “Are you okay?”"], [7.6, "You answer, and it stands down"], [10.4, "Back on your way"]],
+      cam: { p: [-0.6, 3.4, 6.4], l: [0.9, 0.6, -1.2] },
+      build(g) {
+        street(g);
+        const you = person(g, C.you), rb = robot(g), cn = cone(g, C.cyan), cr = car(g, "#8a93b3");
+        cr.rotation.y = Math.PI / 2;
+        // A "concern" column: the prototype's risk score, with its caution / check-in / contact lines
+        const colX = 3.5, colZ = -0.6, H = 1.5;
+        mk(Box(0.22, H, 0.22), B("#c9d3ea", 0.12), g, colX, H / 2, colZ, false);
+        const fillM = G(C.green, 0.9), fill = mk(Box(0.17, 1, 0.17), fillM, g, colX, 0, colZ, false);
+        [0.33, 0.52, 0.72].forEach((v) => mk(Box(0.34, 0.015, 0.34), B("#eef3fa", 0.5), g, colX, v * H, colZ, false));
+        const OK = 8.4, carX = (t) => -22 + 6.5 * (t - 1.0);
+        const sig = (t) => {
+          const cleared = t >= OK, traffic = clamp(1 - Math.abs(carX(t) - 0.4) / 9);
+          return { fall: cleared ? 0 : ease(seg(t, 2.6, 3.1)), still: cleared ? 0 : seg(t, 3.2, 4.6), traffic, prox: traffic * 0.6, quiet: cleared ? 0 : seg(t, 6.2, 8.2) * 0.6 };
+        };
+        // Weights and thresholds are the prototype's defaults
+        const risk = (q) => 0.22 * q.fall + 0.12 * q.still + 0.18 * q.traffic + 0.16 * q.prox + 0.18 * q.quiet;
+        let PEAK = 0; for (let u = 0; u < OK; u += 0.05) PEAK = Math.max(PEAK, risk(sig(u)));
+        const LV = [["Low", C.green, "ok"], ["Caution", C.amber, "warn"], ["Check-in", "#ff7a59", "off"], ["Contact", C.red, "off"]];
+        const lvOf = (r) => (r >= 0.72 ? 3 : r >= 0.52 ? 2 : r >= 0.33 ? 1 : 0);
+        return (t, k) => {
+          const px = t < 10.4 ? pw(t, [[0, -2.6], [2.6, 0.4]]) : pw(t, [[10.4, 0.4], [13, 2.0]]);
+          const fall = ease(seg(t, 2.6, 3.1)) * (1 - ease(seg(t, 9.0, 10.2)));
+          pose(you, px, 0.8, Math.PI / 2, px * 4.6, t < 2.6 || t >= 10.4 ? 1 : 0);
+          you.userData.body.rotation.x = fall * 1.47;
+          you.userData.body.position.y += Math.sin(fall * 1.47) * 0.12;
+          drive(rb, px + 1.5, -0.35, Math.PI / 2);
+          const cx = carX(t); cr.position.set(cx, 0, -3.3); cr.userData.wheels.forEach((w) => { w.rotation.x = cx / 0.34; });
+          // The level holds until you answer, then drops
+          const q = sig(t);
+          let shown = 0;
+          if (t < OK) for (let u = 0; u <= t; u += 0.05) shown = Math.max(shown, risk(sig(u)));
+          else shown = mix(PEAK, risk(q), ease(seg(t, OK, OK + 0.8)));
+          const lv = lvOf(shown);
+          fill.scale.y = Math.max(0.001, shown * H); fill.position.y = shown * H / 2;
+          fillM.color.set(LV[lv][1]); fillM.emissive.set(LV[lv][1]);
+          L("lvl", "Concern: " + LV[lv][0], V(colX, H + 0.2, colZ), LV[lv][2]);
+          const parts = [];
+          if (q.fall > 0.5) parts.push("Fall"); if (q.still > 0.5) parts.push("Not moving"); if (q.traffic > 0.35) parts.push("Car close"); if (q.quiet > 0.2) parts.push("No answer yet");
+          if (parts.length && !on(t, 4.2, 7.4)) L("sig", parts.join(" + "), V(colX, H + 0.65, colZ), "note");
+          const tg = wpos(you.userData.head);
+          aim(rb, tg, k); tone(rb, cn, lv >= 2 ? C.red : lv === 1 ? C.amber : C.cyan); beam(cn, rb, tg, 0.28, 0.14);
+          if (on(t, 4.2, 7.4)) L("say", "“I think something may be wrong. Are you okay? Say I am okay or say cancel.”", null, "say");
+          if (on(t, 7.7, 9.4)) L("ans", "“I am okay.”", wpos(you.userData.head, 0.35), "you");
+          if (on(t, 8.6, 10.6)) L("down", "Stood down", wpos(rb.userData.head, 0.35), "ok");
+        };
+      },
+    },
+    {
+      theme: 5, when: 3, title: "Speaks through your phone",
+      what: "It sends what it wants to say to your phone, over Bluetooth or Wi-Fi, and your phone says it out loud in a natural voice.",
+      why: "It works with a phone you already carry, so its voice is right there with you.",
+      dur: 11, poster: 3.4,
+      beats: [[0, "It spots something worth saying"], [1, "It sends the words to your phone"], [2.6, "Your phone says them out loud"], [5.8, "Bluetooth, or Wi-Fi when there’s no Bluetooth"], [7.2, "Every new warning, the same way"]],
+      cam: (t) => { const lx = -0.6 + 0.42 * t; return { p: [lx - 2.6, 2.9, 5.6], l: [lx + 0.6, 0.8, -0.4] }; },
+      build(g) {
+        plaza(g);
+        const bn = bench(g); bn.position.set(2.8, 0, 1.7); bn.rotation.y = Math.PI;
+        const you = person(g, C.you), rb = robot(g), cn = cone(g, C.cyan), bk = bike(g, "#ff8a3d", true);
+        const arm = you.userData.arms[0];
+        const ph = mk(Box(0.08, 0.15, 0.014), M("#151a2e"), arm, 0, -0.6, 0.05, false);
+        const scrM = G(C.cyan, 0.2); mk(Box(0.066, 0.128, 0.004), scrM, ph, 0, 0, 0.009, false);
+        const dotM = G(C.cyan, 1.6), dots = [];
+        for (let i = 0; i < 7; i++) dots.push(mk(Sph(0.035, 8, 6), dotM, g, 0, 0, 0, false));
+        const rings = [0, 1].map(() => pulse(g, C.cyan, 0.9));
+        const qv = new THREE.Vector3();
+        return (t, k) => {
+          const x = -2.6 + 0.5 * t;
+          pose(you, x, 0.4, Math.PI / 2, x * 4.6, 0.7);
+          arm.rotation.x = -1.15;
+          drive(rb, x + 1.6, -0.5, Math.PI / 2);
+          const bx = 5 - 3.5 * (t - 7.2);
+          bk.position.set(bx, 0, -2.6); bk.rotation.y = -Math.PI / 2; bk.userData.wheels.forEach((w) => { w.rotation.z = -bx / 0.33; });
+          const bikeOn = on(t, 6.4, 9.6);
+          const tg = bikeOn ? wpos(bk, 1.2) : wpos(you.userData.head);
+          aim(rb, tg, k); tone(rb, cn, bikeOn ? C.amber : C.cyan); beam(cn, rb, tg, 0.28, 0.12);
+          const hp = wpos(rb.userData.head), pp = wpos(ph);
+          const send = on(t, 1.0, 2.6) || on(t, 6.0, 7.2), talk = on(t, 2.6, 5.4) || on(t, 7.2, 9.8);
+          dots.forEach((d, i) => {
+            d.visible = send; if (!send) return;
+            const f = (t * 1.3 + i / dots.length) % 1;
+            qv.copy(hp).lerp(pp, f); qv.y += Math.sin(f * Math.PI) * 0.5; d.position.copy(qv);
+          });
+          scrM.emissiveIntensity = send || talk ? 1.4 : 0.2;
+          rings.forEach((m, i) => { if (talk) wave(m, pp.x, pp.y, pp.z, t * 1.4 + i / 2, 0.5, 0.6); else m.visible = false; });
+          if (send || talk) L("via", t < 5.8 ? "Bluetooth" : "Wi-Fi", V((hp.x + pp.x) / 2, Math.max(hp.y, pp.y) + 0.6, (hp.z + pp.z) / 2), "note");
+          if (talk) L("ph", "Your phone", V(pp.x, pp.y - 0.02, pp.z + 0.1), "hl");
+          if (on(t, 2.6, 5.4)) L("say", "“Obstacle near your path on the right. Bench ahead.”", null, "say");
+          if (on(t, 7.2, 9.8)) L("say", "“Bicycle approaching from your left.”", null, "say");
+        };
+      },
+    },
+    {
+      theme: 5, when: 4, title: "Sums up the scene",
+      what: "Every few seconds it can describe what’s around you in one sentence and suggest what to do. It’s off by default, because it uses an online service.",
+      why: "Warnings tell you what to avoid. A short summary tells you where you are.",
+      dur: 11.5, poster: 6.2,
+      beats: [[0, "Waiting at a crossing"], [2.4, "It takes a look around"], [4.6, "It sums it up in one sentence"], [8.6, "The light changes. You decide when to go."]],
+      cam: { p: [3.4, 2.7, 3.6], l: [-0.6, 1.0, -3.6] },
+      build(g) {
+        street(g);
+        const stripe = M("#d9e0f0", { roughness: 0.8 });
+        for (let i = 0; i < 9; i++) mk(Box(3.0, 0.014, 0.42), stripe, g, 0, 0.012, -1.95 - i * 0.78, false);
+        const sg = new THREE.Group(); g.add(sg); sg.position.set(-1.9, 0, -8.8);
+        mk(Cyl(0.06, 0.07, 2.6, 10), M("#39405e"), sg, 0, 1.3, 0);
+        mk(Box(0.5, 0.86, 0.3), M("#1c2238"), sg, 0, 2.7, 0);
+        const redM = G(C.red, 0), walkM = G("#e8f0ff", 0);
+        mk(Box(0.34, 0.3, 0.04), redM, sg, 0, 2.9, 0.16, false);
+        mk(Box(0.34, 0.3, 0.04), walkM, sg, 0, 2.5, 0.16, false);
+        const you = person(g, C.you), rb = robot(g), cn = cone(g, C.cyan), cr = car(g, "#c9a24f");
+        cr.rotation.y = -Math.PI / 2;
+        const frames = [];
+        for (let i = 0; i < 6; i++) { const f = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.34), B("#bfe6ff", 0)); f.renderOrder = 4; g.add(f); frames.push(f); }
+        const sAt = (t) => pw(t, [[0, 0], [2.3, 2.75]]);
+        return (t, k) => {
+          const s = sAt(t), z = 1.8 - s;
+          pose(you, 0, z, Math.PI, s * 4.6, moving(sAt, t) ? 1 : 0);
+          drive(rb, 0.72, z - 0.15, Math.PI);
+          const walk = t >= 8.6;
+          redM.emissiveIntensity = walk ? 0.05 : 1.8; walkM.emissiveIntensity = walk ? 1.8 : 0.05;
+          const cx = 20 - 6 * (t - 4.0); cr.position.set(cx, 0, -6.6); cr.userData.wheels.forEach((w) => { w.rotation.x = -cx / 0.34; });
+          const look = on(t, 2.4, 4.6);
+          const tg = look ? V(-0.6, 1.0, -5.5) : wpos(you.userData.head);
+          aim(rb, tg, k); tone(rb, cn, C.cyan); beam(cn, rb, tg, look ? 1.2 : 0.28, look ? 0.07 : 0.12);
+          const lens = wpos(rb.userData.lens);
+          frames.forEach((f, i) => {
+            if (!on(t, 2.4, 4.4)) { f.visible = false; return; }
+            const ph = (t * 0.7 + i / 6) % 1, e = ease(ph);
+            f.position.set(mix(-2.2 + (i % 3) * 2.2, lens.x, e), mix(0.7 + (i % 2) * 0.9, lens.y, e), mix(-3.2 - (i % 3) * 1.6, lens.z, e));
+            f.scale.setScalar(1 - 0.85 * e); f.quaternion.copy(camera.quaternion);
+            f.material.opacity = Math.sin(ph * Math.PI) * 0.75 * seg(t, 2.4, 2.8) * (1 - seg(t, 4.0, 4.4)); f.visible = true;
+          });
+          if (t >= 2.4) L("sig", walk ? "Walk signal" : "Don’t walk", V(-1.9, 3.4, -8.8), walk ? "ok" : "warn");
+          if (on(t, 3.8, 4.6)) L("think", "Putting it into words…", wpos(rb.userData.head, 0.35), "note");
+          if (on(t, 4.6, 8.4)) L("say", "“Also, I notice a crosswalk ahead with a red walk signal. I suggest you wait for the walk signal.”", null, "say");
+        };
+      },
+    },
+    {
+      theme: 5, when: 5, title: "Its own body: wheels and a turning head",
+      what: "The camera rides on a small four-wheel base, driven over Bluetooth. Its head turns to keep you in view, and is being built to turn all the way round.",
+      why: "A robot built for the job keeps its camera on you, so your hands stay free.",
+      dur: 12, poster: 9,
+      beats: [[0, "The robot’s body"], [0.4, "Four wheels, driven over Bluetooth"], [4.4, "Its head turns to follow you"], [8, "All the way round, no cable to tangle"]],
+      cam: { p: [3.0, 2.5, 4.5], l: [0, 0.6, 0] },
+      build(g) {
+        plaza(g);
+        mk(Cyl(2.3, 2.3, 0.04, 64), M("#2c3560", { roughness: 0.5 }), g, 0, 0.02, 0, false);
+        const rb = robot(g), cn = cone(g, C.cyan), you = person(g, C.you);
+        const arcM = B(C.cyan, 0), arc = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.012, 6, 40, Math.PI * 1.5), arcM);
+        arc.rotation.x = Math.PI / 2; arc.position.y = -0.07; rb.userData.head.add(arc);
+        const P = makePath([[-1.3, 0.5], [0.2, 0.5], [0.7, 0.0], [0.2, -0.5], [-0.3, -0.2], [0, 0]]);
+        const sAt = (t) => P.len * ease(seg(t, 0.4, 4.0)), a0 = 2.3, R = 1.5;
+        return (t, k) => {
+          const s = sAt(t), p = P.at(s), h = P.head(s);
+          drive(rb, p.x, p.z, h);
+          const a = a0 + Math.max(0, t - 4.4) * 0.95;
+          pose(you, R * Math.sin(a), R * Math.cos(a), a + Math.PI / 2, a * 6.9, t >= 4.4 ? 1 : 0);
+          const tg = t < 3.8 ? V(p.x + Math.sin(h) * 2, 0.6, p.z + Math.cos(h) * 2) : wpos(you.userData.head);
+          aim(rb, tg, k); tone(rb, cn, C.cyan); beam(cn, rb, tg, 0.28, t < 3.8 ? 0 : 0.12);
+          arcM.opacity = 0.8 * seg(t, 4.6, 5.2); arc.visible = arcM.opacity > 0.01;
+          if (on(t, 0.4, 4.4)) L("base", "Four wheels · driven over Bluetooth", V(p.x, 0.75, p.z), "ok");
+          if (t >= 4.6) L("head", t < 8 ? "Head turns to keep you in view" : "All the way round · being finished", wpos(rb.userData.head, 0.3), t < 8 ? "ok" : "warn");
+        };
+      },
+    },
+  ];
+
+  /* ---------- part 2: ten planned features ---------- */
+  const NEXT = [
+    {
+      theme: 0, when: 0, title: "Spots a fall and calls for help",
+      what: "If you fall, it notices right away and asks if you’re okay. If you don’t answer, it calls someone you trust and tells them where you are.",
+      why: "After a fall, the first minutes matter most, and many people can’t reach a phone.",
+      dur: 12, poster: 9.4,
+      beats: [[0, "Out for a walk together"], [3, "A fall: it notices at once"], [4.6, "It checks: “Are you okay?”"], [7.4, "No answer, so it calls family"], [10.2, "Help is on the way"]],
+      cam: { p: [-0.6, 2.4, 4.6], l: [1.0, 0.5, 0.3] },
+      build(g) {
+        street(g);
+        const you = person(g, C.you), rb = robot(g), cn = cone(g, C.cyan);
+        const pa = pulse(g, C.red), pb = pulse(g, C.red), sa = pulse(g, C.green, 0.9), sb = pulse(g, C.green, 0.9);
+        const ux = (x) => pw(x, [[0, -2.2], [3, 0.4]]);
+        return (t, k) => {
+          const x = ux(t), fall = ease(seg(t, 3, 3.5));
+          pose(you, x, 0.8, Math.PI / 2, x * 4.6, t < 3 ? 1 : 0);
+          you.userData.body.rotation.x = fall * 1.47;
+          you.userData.body.position.y += Math.sin(fall * 1.47) * 0.12;
+          const rx = t < 3 ? x + 1.5 : mix(1.9, 2.9, ease(seg(t, 4.2, 5.6)));
+          const rz = t < 3 ? -0.35 : mix(-0.35, 0.05, ease(seg(t, 4.2, 5.6)));
+          drive(rb, rx, rz, Math.PI / 2);
+          const head = wpos(you.userData.head);
+          aim(rb, head, k);
+          tone(rb, cn, t >= 3.25 ? C.red : C.cyan);
+          beam(cn, rb, head, 0.28, 0.14);
+          const cx = (x + head.x) / 2;
+          if (t >= 3.3) { wave(pa, cx, 0.03, 0.8, t * 0.8, 1.6); wave(pb, cx, 0.03, 0.8, t * 0.8 + 0.5, 1.6); } else { pa.visible = pb.visible = false; }
+          if (on(t, 4.6, 7.2)) L("say", "“Are you okay?”", wpos(rb.userData.head, 0.3), "say");
+          if (on(t, 6.0, 7.4)) L("quiet", "No reply", V(cx, 0.75, 0.8), "dim");
+          if (t >= 7.4) { wave(sa, rx, 0.75, rz, t * 0.9, 1.1, 0.8); wave(sb, rx, 0.75, rz, t * 0.9 + 0.5, 1.1, 0.8); card(callCard(t)); } else { sa.visible = sb.visible = false; }
+        };
+      },
+    },
+    {
+      theme: 0, when: 1, title: "Hears what’s behind you",
+      what: "It listens for sirens, horns and bike bells you can’t see, then tells you where the sound is and what to do.",
+      why: "Eyes and cameras look forward. Sound covers the blind spot behind you.",
+      dur: 12, poster: 6.6,
+      beats: [[0, "Walking along the street"], [2, "A siren, still out of sight"], [4, "It turns to check behind you"], [5.4, "It tells you where, and what to do"], [8.6, "The ambulance passes safely"]],
+      cam: { p: [-3.4, 3.2, 6.0], l: [0.2, 0.8, -1.0] },
+      build(g) {
+        street(g);
+        const you = person(g, C.you), rb = robot(g), cn = cone(g, C.cyan), amb = ambulance(g);
+        const rings = [0, 1, 2].map(() => pulse(g, C.amber, 0.96));
+        const ux = (x) => pw(x, [[0, -1.6], [6.2, 2.0]]);
+        const uz = (x) => pw(x, [[6.4, 0.5], [7.6, 1.25]]);
+        return (t, k) => {
+          const x = ux(t), z = uz(t);
+          pose(you, x, z, Math.PI / 2, (x + z) * 4.6, moving(ux, t) || moving(uz, t) ? 1 : 0);
+          const ax = -26 + 3.4 * t;
+          amb.position.set(ax, 0, -3.3); amb.rotation.y = Math.PI / 2;
+          amb.userData.wheels.forEach((w) => { w.rotation.x = ax / 0.36; });
+          const fl = Math.sin(t * 16) > 0;
+          amb.userData.lr.material.emissiveIntensity = fl ? 2.4 : 0.15;
+          amb.userData.lb.material.emissiveIntensity = fl ? 0.15 : 2.4;
+          rings.forEach((m, i) => { if (on(t, 1.8, 10.5)) wave(m, ax, 0.03, -3.3, t * 0.55 + i / 3, 13, 0.55); else m.visible = false; });
+          drive(rb, x + 1.5, -0.25 + (z - 0.5) * 0.6, Math.PI / 2);
+          const look = on(t, 4.0, 8.4) ? V(ax, 1.2, -3.3) : wpos(you.userData.head);
+          aim(rb, look, k);
+          tone(rb, cn, on(t, 4.0, 8.8) ? C.amber : C.cyan);
+          beam(cn, rb, look, on(t, 4.0, 8.4) ? 0.9 : 0.28, on(t, 4.0, 8.4) ? 0.08 : 0.13);
+          if (on(t, 2.2, 9.5)) L("siren", "Siren", V(ax, 2.7, -3.3), "warn");
+          if (on(t, 5.4, 8.6)) L("say", "“Siren behind you, on your left. Keep right.”", wpos(rb.userData.head, 0.3), "say");
+        };
+      },
+    },
+    {
+      theme: 0, when: 0, title: "Sees what’s heading your way",
+      what: "It can tell a parked bike from one coming at you. It stays quiet about the first and warns you early about the second.",
+      why: "Fewer false alarms means people keep trusting the warnings that matter.",
+      dur: 10, poster: 4.4,
+      beats: [[0, "Two bikes nearby"], [1.4, "Parked: no need to warn"], [2.4, "This one is coming toward you"], [3.8, "A clear, early warning"], [7.2, "It passes. Carry on."]],
+      cam: { p: [-2.4, 2.8, 5.2], l: [3.0, 0.6, 0.2] },
+      build(g) {
+        street(g);
+        const you = person(g, C.you), rb = robot(g), cn = cone(g, C.cyan);
+        const parked = bike(g, "#7b86a6", false); parked.position.set(3.6, 0, 1.8); parked.rotation.y = Math.PI / 2;
+        const mv = bike(g, "#ff8a3d", true);
+        const dashes = new THREE.Group(); mv.add(dashes);
+        const dashM = B(C.amber, 0.9);
+        for (let i = 0; i < 9; i++) mk(Box(0.09, 0.01, 0.28), dashM, dashes, 0, 0.04, 1.0 + i * 0.5, false);
+        const ux = (x) => pw(x, [[0, -2.2], [4.6, 1.5], [7.2, 1.5], [10, 3.3]]);
+        return (t, k) => {
+          const x = ux(t);
+          pose(you, x, 0.75, Math.PI / 2, x * 4.6, moving(ux, t) ? 1 : 0);
+          const bx = 12 - 2.3 * Math.max(0, t - 1), sw = seg(t, 3.9, 4.8);
+          mv.position.set(bx, 0, mix(0.35, -0.95, ease(sw)));
+          mv.rotation.y = -Math.PI / 2 - 0.35 * Math.sin(Math.PI * sw);
+          mv.userData.wheels.forEach((w) => { w.rotation.z = -bx / 0.33; });
+          dashes.visible = on(t, 2.4, 4.4);
+          drive(rb, x + 1.5, 0.1, Math.PI / 2);
+          const target = on(t, 1.6, 2.5) ? V(3.6, 0.6, 1.8) : on(t, 2.5, 5.6) ? wpos(mv, 1.3) : wpos(you.userData.head);
+          aim(rb, target, k);
+          tone(rb, cn, on(t, 2.5, 6) ? C.amber : C.cyan);
+          beam(cn, rb, target, on(t, 1.6, 5.6) ? 0.5 : 0.28, 0.13);
+          if (on(t, 1.4, 4.4)) L("pk", "Parked: no alert", V(3.6, 1.35, 1.8), "dim");
+          if (on(t, 2.4, 3.8)) L("mv", "Coming toward you", wpos(mv, 2.05), "warn");
+          if (on(t, 3.8, 6.2)) L("say", "“Bike ahead, coming your way. Stop.”", wpos(rb.userData.head, 0.3), "say");
+        };
+      },
+    },
+    {
+      theme: 1, when: 1, title: "Tells you what’s ahead, in plain words",
+      what: "Ask “What’s ahead?” and it names what it sees: a curb in two steps, a pole on your right, stairs going up.",
+      why: "“Curb in two steps” is something you can act on. A beep is not.",
+      dur: 10, poster: 6.6,
+      beats: [[0, "You ask: “What’s ahead?”"], [2, "It names the curb"], [4, "Then the pole on your right"], [6, "Then the stairs"], [8, "You know what’s coming"]],
+      cam: { p: [-1.6, 3.0, 5.6], l: [4.6, 0.6, 0.4] },
+      build(g) {
+        street(g);
+        const you = person(g, C.you), rb = robot(g), cn = cone(g, C.cyan);
+        const curbM = M("#3a4370", { emissive: C.cyan, emissiveIntensity: 0 });
+        const poleM = M("#8d96b8", { metalness: 0.4, roughness: 0.4, emissive: C.cyan, emissiveIntensity: 0 });
+        const stairM = M("#4a5480", { emissive: C.cyan, emissiveIntensity: 0 });
+        mk(Box(9, 0.16, 3.4), curbM, g, 7.7, 0.08, 0.4);
+        mk(Cyl(0.07, 0.07, 2.6), poleM, g, 5.6, 1.46, 1.55);
+        for (let i = 0; i < 5; i++) mk(Box(0.42, 0.17 * (i + 1), 3.4), stairM, g, 9.2 + i * 0.42, 0.16 + 0.085 * (i + 1), 0.4);
+        mk(Box(2.4, 0.85, 3.4), stairM, g, 12.5, 0.585, 0.4);
+        const ux = (x) => pw(x, [[0, 1.4], [8, 1.4], [10, 2.7]]);
+        return (t, k) => {
+          const x = ux(t);
+          pose(you, x, 0.75, Math.PI / 2, x * 4.6, moving(ux, t) ? 1 : 0);
+          drive(rb, x + 0.9, -0.6, Math.PI / 2);
+          rb.position.y = x + 0.9 > 3.2 ? 0.16 : 0;
+          const pts = [V(3.2, 0.16, 0.6), V(5.6, 1.4, 1.55), V(9.6, 0.6, 0.4)];
+          const i = on(t, 2, 4) ? 0 : on(t, 4, 6) ? 1 : on(t, 6, 8) ? 2 : -1;
+          const tg = i >= 0 ? pts[i] : wpos(you.userData.head);
+          aim(rb, tg, k); tone(rb, cn, C.cyan); beam(cn, rb, tg, i >= 0 ? 0.55 : 0.28, 0.12);
+          const glowNow = 0.3 + 0.15 * Math.sin(t * 6);
+          curbM.emissiveIntensity = i === 0 ? glowNow : 0;
+          poleM.emissiveIntensity = i === 1 ? glowNow : 0;
+          stairM.emissiveIntensity = i === 2 ? glowNow : 0;
+          if (on(t, 0.3, 2.2)) L("ask", "“What’s ahead?”", wpos(you.userData.head, 0.35), "you");
+          if (t >= 2) L("l1", "Curb · 2 steps", V(3.2, 0.5, 0.0), i === 0 ? "hl" : "dim");
+          if (t >= 4) L("l2", "Pole · on your right", V(5.6, 2.95, 1.55), i === 1 ? "hl" : "dim");
+          if (t >= 6) L("l3", "Stairs up · 10 steps", V(9.8, 1.35, 0.4), i === 2 ? "hl" : "dim");
+          const say = ["“Curb in two steps.”", "“Pole on your right.”", "“Stairs ahead, going up.”"][i];
+          if (say) L("say", say, wpos(rb.userData.head, 0.3), "say");
+        };
+      },
+    },
+    {
+      theme: 1, when: 0, title: "Stays with you in a crowd",
+      what: "It remembers who you are, so it keeps following you even when strangers walk past or step between you.",
+      why: "In a busy place, following the wrong person is the worst mistake it could make.",
+      dur: 11, poster: 5.8,
+      beats: [[0, "It knows who it’s helping"], [3.4, "A stranger cuts between you"], [5.4, "Still locked on you"], [8, "Busy square, same person"]],
+      cam: (t) => { const lx = -1 + 0.5 * t; return { p: [lx - 3.6, 3.6, 5.8], l: [lx, 0.6, 0] }; },
+      build(g) {
+        plaza(g);
+        const you = person(g, C.you), rb = robot(g), cn = cone(g, C.cyan);
+        const lock = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.5, 48), B(C.cyan, 0.85)); lock.rotation.x = -Math.PI / 2; lock.position.y = 0.03; g.add(lock);
+        const s1 = person(g, "#7b86a6"), s2 = person(g, "#9a7fb0"), s3 = person(g, "#6f9a8a"), s4 = person(g, "#a08a70"), s5 = person(g, "#8796b8");
+        return (t, k) => {
+          const ux = -2 + 0.5 * t;
+          pose(you, ux, 0, Math.PI / 2, ux * 4.6, 0.75);
+          lock.position.x = ux;
+          drive(rb, ux + 1.9, -0.15, Math.PI / 2);
+          const z1 = -5 + 1.3 * (t - 1); pose(s1, 1.3, z1, 0, z1 * 4.6, 1);
+          const x2 = 9 - 1.1 * t; pose(s2, x2, 1.15, -Math.PI / 2, x2 * 4.6, 1);
+          const z3 = 6 - 0.9 * t; pose(s3, 5.2, z3, Math.PI, z3 * 4.6, 1);
+          const x5 = -7 + 1.0 * t; pose(s5, x5, -1.6, Math.PI / 2, x5 * 4.6, 1);
+          pose(s4, -3.2, -2.6, 0.6, 0, 0);
+          const head = wpos(you.userData.head);
+          aim(rb, head, k); tone(rb, cn, C.cyan);
+          beam(cn, rb, head, 0.28, on(t, 4.35, 5.35) ? 0.05 : 0.14);
+          L("you", t >= 5.4 ? "You · still locked on" : "You", wpos(you.userData.head, 0.32), "ok");
+          if (on(t, 3.6, 6)) L("st", "Stranger", wpos(s1.userData.head, 0.32), "dim");
+        };
+      },
+    },
+    {
+      theme: 1, when: 2, title: "Learns your routes",
+      what: "Walk a route once with a friend. Next time it remembers the way, and the tricky spots along it.",
+      why: "It gives people the confidence to make regular trips on their own.",
+      dur: 13, poster: 9.4,
+      beats: [[0, "First time: you walk it with a friend"], [3, "It saves the route and the tricky spots"], [6.2, "Next time: just you"], [8.4, "It warns you before the pothole"], [12.2, "Arrived at the pharmacy"]],
+      cam: { p: [0.5, 7.2, 8.0], l: [1.2, 0, 0.6] },
+      build(g) {
+        plaza(g);
+        const P = makePath([[-4, 0], [-1.5, 0], [0, 1.5], [2.5, 1.5], [4, 0], [6.2, 0]]);
+        const pathM = M("#323b64", { roughness: 0.9 });
+        P.segs.forEach((q, i) => {
+          const m = mk(Box(1.2, 0.02, q.l + 1.2), pathM, g, (q.x0 + q.x1) / 2, 0.025 + i * 0.002, (q.z0 + q.z1) / 2, false);
+          m.rotation.y = Math.atan2(q.x1 - q.x0, q.z1 - q.z0);
+        });
+        const sPot = 2.5 + Math.hypot(1.5, 1.5) + 1.25, pot = P.at(sPot);
+        mk(Cyl(0.26, 0.22, 0.03, 20), M("#06070f"), g, pot.x, 0.04, pot.z, false);
+        const pin = new THREE.Group(); g.add(pin); pin.position.set(pot.x, 0, pot.z);
+        mk(Sph(0.13), G(C.amber, 0.9), pin, 0, 0.95, 0);
+        mk(new THREE.ConeGeometry(0.1, 0.35, 16), G(C.amber, 0.9), pin, 0, 0.72, 0).rotation.x = Math.PI;
+        const dimM = B(C.cyan, 0.35), brightM = B(C.cyan, 0.95), dots = [], N = 34;
+        for (let i = 0; i < N; i++) {
+          const s = (i + 0.5) * P.len / N, a = P.at(s);
+          const d = new THREE.Mesh(Sph(0.05, 8, 6), dimM); d.position.set(a.x, 0.08, a.z); d.userData.s = s; g.add(d); dots.push(d);
+        }
+        mk(Box(1.6, 1.7, 2.2), M("#d7deef"), g, 7.6, 0.85, 0);
+        mk(Box(0.06, 0.5, 0.16), G(C.green, 1.2), g, 6.78, 1.35, 0, false);
+        mk(Box(0.06, 0.16, 0.5), G(C.green, 1.2), g, 6.78, 1.35, 0, false);
+        mk(Box(0.04, 0.9, 0.6), M("#25304f"), g, 6.79, 0.45, 0, false);
+        const you = person(g, C.you), fr = person(g, "#9b8cff"), rb = robot(g), cn = cone(g, C.cyan);
+        return (t, k) => {
+          const trip2 = t >= 6.2;
+          const s = trip2 ? P.len * seg(t, 6.6, 12.2) : P.len * seg(t, 0.3, 5.4);
+          const walking = s > 0.01 && s < P.len - 0.01;
+          const h = P.head(s), a = P.at(s), r = right(h);
+          const off = trip2 ? -0.55 * ease(seg(s, sPot - 1.6, sPot - 0.7)) * (1 - ease(seg(s, sPot + 0.5, sPot + 1.2))) : 0.25;
+          pose(you, a.x + r.x * off, a.z + r.z * off, h, s * 4.6, walking ? 1 : 0);
+          fr.visible = !trip2;
+          if (!trip2) { const b = P.at(s + 0.15), hb = P.head(s + 0.15), rr = right(hb); pose(fr, b.x - rr.x * 0.5, b.z - rr.z * 0.5, hb, s * 4.6 + 1, walking ? 1 : 0); }
+          const sr = trip2 ? Math.min(P.len + 0.3, s + 1.3) : s - 1.3;
+          const ra = P.at(sr), rh = P.head(sr), rr = right(rh);
+          drive(rb, ra.x + rr.x * 0.2, ra.z + rr.z * 0.2, rh);
+          const warnZone = trip2 && on(s, sPot - 2.6, sPot);
+          const tg = warnZone ? V(pot.x, 0.05, pot.z) : wpos(you.userData.head);
+          aim(rb, tg, k); tone(rb, cn, warnZone ? C.amber : C.cyan); beam(cn, rb, tg, warnZone ? 0.45 : 0.28, 0.12);
+          pin.visible = t >= 3; pin.position.y = 0.05 * Math.sin(t * 3);
+          if (on(t, 3, 6.2)) L("pot", "Saved: pothole", V(pot.x, 1.35, pot.z), "warn");
+          if (warnZone) L("say", "“Pothole ahead. Keep left.”", wpos(rb.userData.head, 0.3), "say");
+          L("ph", t >= 12.2 ? "Arrived: pharmacy" : "Pharmacy", V(7.6, 2.05, 0), t >= 12.2 ? "ok" : "dim");
+          dots.forEach((d) => { d.visible = trip2 || d.userData.s <= s; d.material = trip2 && d.userData.s > s ? brightM : dimM; });
+        };
+      },
+    },
+    {
+      theme: 2, when: 0, title: "Weekly update for family",
+      what: "Family gets a short note each week: how much you walked, how steady you were, and any close calls.",
+      why: "Family stays in the loop without having to check in all the time.",
+      dur: 11, poster: 7,
+      beats: [[0, "Every walk adds up"], [5.3, "Sunday: a short note to family"], [8, "No need to call and check"]],
+      cam: { p: [0, 5.4, 6.8], l: [0, 0.4, 0] },
+      build(g) {
+        plaza(g);
+        const loop = new THREE.Mesh(new THREE.RingGeometry(2.85, 3.15, 96), B(C.cyan, 0.18)); loop.rotation.x = -Math.PI / 2; loop.position.y = 0.03; g.add(loop);
+        const you = person(g, C.you), rb = robot(g), cn = cone(g, C.cyan);
+        const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], km = [1.2, 1.5, 0.9, 1.6, 1.3, 1.4, 1.5];
+        return (t, k) => {
+          const a = t * 0.6;
+          pose(you, 3 * Math.sin(a), 3 * Math.cos(a), a + Math.PI / 2, a * 13.8, 1);
+          const b = a + 0.55; drive(rb, 3 * Math.sin(b), 3 * Math.cos(b), b + Math.PI / 2);
+          const head = wpos(you.userData.head);
+          aim(rb, head, k); tone(rb, cn, C.cyan); beam(cn, rb, head, 0.28, 0.12);
+          if (t < 5.3) {
+            const d = Math.min(6, Math.floor(t / 0.75)), tot = km.slice(0, d + 1).reduce((x, y) => x + y, 0);
+            L("day", days[d] + " · " + tot.toFixed(1) + " km this week", wpos(rb.userData.head, 0.35), "note");
+          } else card(REPORT);
+        };
+      },
+    },
+    {
+      theme: 2, when: 1, title: "Private by design",
+      what: "It makes sense of what it sees on the robot itself. It keeps short notes, not video, and nothing goes online unless you choose.",
+      why: "People will only welcome a camera that follows them if they stay in control of it.",
+      dur: 10.5, poster: 8,
+      beats: [[0, "It sees the street around you"], [2.2, "Everything is understood on the robot"], [5.2, "Video is deleted. Short notes are kept."], [7.6, "Nothing goes online unless you choose"]],
+      cam: { p: [-2.2, 2.2, 4.0], l: [0.4, 0.8, 0] },
+      build(g) {
+        street(g);
+        const you = person(g, C.you), rb = robot(g), cn = cone(g, C.cyan);
+        const domeG = new THREE.SphereGeometry(0.85, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2);
+        const dome = new THREE.Group(); g.add(dome);
+        dome.add(new THREE.Mesh(domeG, B(C.cyan, 0.08)));
+        dome.add(new THREE.Mesh(domeG, new THREE.MeshBasicMaterial({ color: C.cyan, wireframe: true, transparent: true, opacity: 0.22 })));
+        const frames = [];
+        for (let i = 0; i < 8; i++) { const f = new THREE.Mesh(new THREE.PlaneGeometry(0.44, 0.3), B("#bfe6ff", 0)); f.renderOrder = 4; g.add(f); frames.push(f); }
+        return (t, k) => {
+          pose(you, -1.0, 0.9, Math.PI / 2 + 0.3, 0, 0);
+          drive(rb, 0.6, 0.1, -Math.PI / 2);
+          const head = wpos(you.userData.head);
+          aim(rb, head, k); tone(rb, cn, C.cyan); beam(cn, rb, head, 0.28, 0.1);
+          const lens = wpos(rb.userData.lens);
+          frames.forEach((f, i) => {
+            if (t > 5.8) { f.visible = false; return; }
+            const ph = (t * 0.45 + i / 8) % 1, e = ease(ph), ang = i * 0.8 + 0.4;
+            f.position.set(mix(0.6 + Math.sin(ang) * 3.2, lens.x, e), mix(0.9 + (i % 3) * 0.45, lens.y, e), mix(0.1 + Math.cos(ang) * 2.6, lens.z, e));
+            f.scale.setScalar(1 - 0.85 * e);
+            f.quaternion.copy(camera.quaternion);
+            f.material.opacity = Math.sin(ph * Math.PI) * 0.75 * (1 - seg(t, 5.2, 5.8));
+            f.visible = true;
+          });
+          const dm = ease(seg(t, 2.2, 3.0));
+          dome.position.set(0.6, 0, 0.1); dome.scale.setScalar(Math.max(0.001, dm)); dome.visible = dm > 0;
+          if (on(t, 2.6, 5.2)) L("dome", "Understood on the robot", V(0.6, 1.15, 0.1), "ok");
+          if (on(t, 5.2, 7.6)) L("del", "Video deleted", V(-0.3, 0.55, 0.1), "dim");
+          if (t >= 5.4) L("n1", "3:02 pm · walking, steady", V(1.9, 1.45 + 0.05 * seg(t, 5.4, 6), 0.1), "note");
+          if (t >= 6.2) L("n2", "3:05 pm · curb ahead, warned", V(1.9, 1.0, 0.1), "note");
+          if (t >= 7.6) L("cloud", "Online sharing: off unless you choose", V(0.6, 2.1, -0.4), "off");
+        };
+      },
+    },
+    {
+      theme: 2, when: 2, title: "One brain, any wheels",
+      what: "The smart head clips onto a walker, a wheelchair or a shopping cart, and brings the same warnings with it.",
+      why: "One product can then help far more people, using things they already own.",
+      dur: 13, poster: 7,
+      beats: [[0, "The smart head on its own"], [2, "Clipped onto a walker"], [5.5, "Onto a wheelchair"], [9, "Onto a shopping cart"]],
+      cam: { p: [2.2, 2.0, 3.0], l: [0, 0.65, 0] },
+      build(g) {
+        plaza(g);
+        mk(Cyl(1.5, 1.5, 0.05, 56), M("#2c3560", { roughness: 0.5 }), g, 0, 0.025, 0, false);
+        const unit = smartHead(g), devs = [walkerModel(g), chairModel(g), cartModel(g)];
+        const mounts = [V(0, 0.88, 0.22), V(0.27, 0.72, 0.12), V(0, 1.05, -0.46)];
+        const names = ["On a walker", "On a wheelchair", "On a shopping cart"];
+        const spans = [[2, 5.5], [5.5, 9], [9, 13]];
+        return (t) => {
+          const spin = t * 0.4;
+          let attach = 0, mount = null, cur = -1;
+          devs.forEach((d, i) => {
+            const [t0, t1] = spans[i];
+            const enter = ease(seg(t, t0 - 0.8, t0)), leave = i < 2 ? ease(seg(t, t1 - 0.5, t1 + 0.3)) : 0;
+            d.visible = enter > 0.001 && leave < 0.999;
+            d.position.set(-6 * (1 - enter) + 6 * leave, 0, 0); d.rotation.y = spin; d.updateMatrixWorld();
+            const a = ease(seg(t, t0 + 0.05, t0 + 0.8)) * (i < 2 ? 1 - ease(seg(t, t1 - 1.1, t1 - 0.5)) : 1);
+            if (a > attach) { attach = a; mount = d.localToWorld(mounts[i].clone()); cur = i; }
+          });
+          const hover = V(0, 1.55 + 0.05 * Math.sin(t * 2), 0);
+          unit.position.copy(mount ? hover.lerp(mount, attach) : hover);
+          unit.rotation.y = spin;
+          unit.userData.head.rotation.y = Math.sin(t * 1.5) * 0.6;
+          if (t < 2) L("u", "The smart head", V(0, 2.05, 0), "ok");
+          if (cur >= 0 && attach > 0.6) L("dev", names[cur], V(0, 1.75, 0), "ok");
+        };
+      },
+    },
+    {
+      theme: 2, when: 1, title: "Night rounds in care homes",
+      what: "In a care home, it waits by the bed. If a resident gets up at night, it lights the way and quietly tells the staff.",
+      why: "Falls at night are a big risk in care homes, and staff can’t be in every room.",
+      dur: 12, poster: 7, env: "night",
+      beats: [[0, "2:14 am, room 12"], [2, "A resident gets up"], [3.2, "It wakes and lights the way"], [5.6, "Night staff get a quiet alert"], [8.4, "A nurse checks in"]],
+      cam: { p: [-3.2, 3.8, 3.9], l: [0, 0.4, -1.3] },
+      build(g) {
+        const wallM = M("#1d2034", { roughness: 0.95 }), bedM = M("#3b3550");
+        mk(Box(7.2, 0.04, 5.6), M("#2b2536", { roughness: 0.9 }), g, 0, 0.02, -0.4, false);
+        mk(Box(4.7, 2.6, 0.12), wallM, g, -1.25, 1.3, -3.2);
+        mk(Box(1.5, 2.6, 0.12), wallM, g, 2.85, 1.3, -3.2);
+        mk(Box(1.0, 0.5, 0.12), wallM, g, 1.6, 2.35, -3.2);
+        mk(Box(0.12, 2.6, 5.6), wallM, g, -3.6, 1.3, -0.4);
+        mk(Box(0.02, 0.9, 1.2), G("#5f7bd6", 0.6), g, -3.53, 1.5, -0.6, false);
+        const hall = mk(Box(1.0, 2.1, 0.02), G(C.warm, 0), g, 1.6, 1.05, -3.3, false);
+        mk(Box(2.2, 0.32, 1.05), bedM, g, -1.75, 0.2, -1.95);
+        mk(Box(2.1, 0.16, 1.0), M("#c9cfe2"), g, -1.75, 0.44, -1.95);
+        mk(Box(0.42, 0.1, 0.62), M("#eef1f8"), g, -2.5, 0.57, -1.95);
+        mk(Box(1.3, 0.05, 1.02), M("#4b5aa0"), g, -1.2, 0.545, -1.95);
+        mk(Box(0.08, 0.8, 1.05), bedM, g, -2.85, 0.6, -1.95);
+        mk(Cyl(0.36, 0.36, 0.02, 32), G(C.cyan, 0.25), g, -0.1, 0.05, -0.35, false);
+        const lamp = new THREE.PointLight(C.warm, 0, 3.4, 2); g.add(lamp);
+        const disc = new THREE.Mesh(new THREE.CircleGeometry(0.9, 40), B(C.warm, 0)); disc.rotation.x = -Math.PI / 2; disc.position.y = 0.045; g.add(disc);
+        const res = person(g, "#c8b6ff"), rb = robot(g), cn = cone(g, C.warm);
+        const P = makePath([[-0.55, -1.0], [0.9, -1.25], [1.6, -2.6], [1.6, -2.8]]);
+        const dock = { x: -0.1, z: -0.35, h: Math.PI };
+        return (t, k) => {
+          const s = P.len * seg(t, 3.7, 9.6);
+          if (t < 3.6) {
+            const up = ease(seg(t, 2.0, 3.4));
+            pose(res, mix(-0.75, -0.55, up), mix(-1.95, -1.0, up), amix(0, P.head(0), up), 0, 0);
+            res.position.y = mix(0.52, 0, up);
+            res.userData.body.rotation.z = (1 - up) * Math.PI / 2;
+            res.userData.body.position.y = Math.sin((1 - up) * Math.PI / 2) * 0.13;
+          } else {
+            const a = P.at(s); pose(res, a.x, a.z, P.head(s), s * 4.6, s < P.len - 0.01 ? 0.8 : 0); res.position.y = 0;
+          }
+          const go = ease(seg(t, 3.5, 4.5)), rs = Math.min(s + 0.9, P.len - 0.8), ra = P.at(rs), rh = P.head(rs), rr = right(rh);
+          drive(rb, mix(dock.x, ra.x + rr.x * 0.45, go), mix(dock.z, ra.z + rr.z * 0.45, go), amix(dock.h, rh, go));
+          const wake = t >= 3.1, head = wpos(res.userData.head);
+          aim(rb, head, k); tone(rb, cn, wake ? C.warm : "#2a3050"); beam(cn, rb, head, 0.28, wake ? 0.1 : 0);
+          const lit = ease(seg(t, 3.3, 4.2)), ahead = P.at(Math.min(s + 1.0, P.len));
+          lamp.position.set(ahead.x, 0.7, ahead.z); lamp.intensity = lit * 1.6;
+          disc.position.x = ahead.x; disc.position.z = ahead.z; disc.material.opacity = lit * 0.22;
+          hall.material.emissiveIntensity = ease(seg(t, 8.4, 9.2)) * 1.4;
+          if (t < 2) L("time", "2:14 am · Room 12", V(-1.75, 1.3, -1.95), "dim");
+          if (on(t, 3.9, 5.6)) L("say", "“Lights on. Take your time.”", wpos(rb.userData.head, 0.3), "say");
+          if (on(t, 5.6, 8.6)) card(PAGER);
+          if (t >= 9.2) L("nurse", "Nurse on the way", V(1.6, 2.3, -3.3), "ok");
+        };
+      },
+    },
+  ];
+
+  /* ---------- one player per part of the page (works even without WebGL) ---------- */
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const BG = "#070a18";
+  const PAUSE = "M7 5h3.5v14H7zM13.5 5H17v14h-3.5z", PLAY = "M8 5.5v13l11-6.5z";
+  const THEATRE =
+    '<div class="viewer">' +
+      '<div class="stage" role="img" aria-label="">' +
+        '<canvas class="gl"></canvas>' +
+        '<div class="labels" aria-hidden="true"></div>' +
+        '<div class="card" hidden aria-hidden="true"></div>' +
+        '<div class="cap" aria-hidden="true"><span class="capStep"></span><span class="capText"></span></div>' +
+        '<p class="hint" aria-hidden="true">Drag to turn the view</p>' +
+        '<div class="speech" hidden aria-hidden="true"><span>OBSERV-E says</span><p class="speechText"></p></div>' +
+        '<p class="fallback" hidden>The 3D scenes need WebGL, which is turned off in this browser. The feature list still works.</p>' +
+      "</div>" +
+      '<div class="controls">' +
+        '<button class="ctl bPrev" type="button" aria-label="Previous feature"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="st" d="M15 6l-6 6 6 6"/></svg></button>' +
+        '<button class="ctl bPlay" type="button" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fl playPath" d="' + PAUSE + '"/></svg></button>' +
+        '<button class="ctl bNext" type="button" aria-label="Next feature"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="st" d="M9 6l6 6-6 6"/></svg></button>' +
+        '<input type="range" class="scrub" min="0" max="1000" value="0" aria-label="Scene timeline">' +
+        '<button class="tourBtn" type="button" aria-pressed="false">Present all</button>' +
+      "</div>" +
+      '<div class="info" aria-live="polite">' +
+        '<div class="infoTop"><span class="theme iTheme"></span><span class="w iWhen"></span><span class="count iCount"></span></div>' +
+        '<h3 class="iTitle"></h3><p class="what iWhat"></p>' +
+        '<div class="why"><p class="eyebrow">Why it matters</p><p class="iWhy"></p></div>' +
+      "</div>" +
+    "</div>" +
+    '<aside class="list" aria-label="Features"><p class="legend"></p><div class="groups"></div></aside>';
+
+  let active = null;
+
+  function makePlayer(root, scenes, order, legend) {
+    root.innerHTML = THEATRE;
+    const q = (c) => root.querySelector("." + c);
+    const stage = q("stage"), speechEl = q("speech"), speechText = q("speechText"), cardEl = q("card"), capStep = q("capStep"), capText = q("capText");
+    const scrub = q("scrub"), playBtn = q("bPlay"), tourBtn = q("tourBtn"), hint = q("hint");
+    const me = { labelsEl: q("labels"), labelMap: new Map(), touched: new Set(), cardHtml: null, sayText: null, snap: true };
+    let cur = 0, t = 0, playing = false, tour = false, hold = 0, update = null, sceneRoot = null, yaw = 0, pitch = 0, shownCard, shownSay, beatIdx = -1;
+
+    q("legend").innerHTML = legend;
+    order.forEach((gi) => {
+      const th = THEMES[gi];
+      const grp = document.createElement("div"); grp.className = "group"; grp.style.setProperty("--gc", th.color);
+      const h = document.createElement("h3"); h.textContent = th.name; grp.appendChild(h);
+      scenes.forEach((s, i) => {
+        if (s.theme !== gi) return;
+        const b = document.createElement("button"); b.type = "button"; b.className = "feat"; b.dataset.i = i;
+        b.innerHTML = '<span class="num">' + String(i + 1).padStart(2, "0") + '</span><span></span><span class="w w' + s.when + '">' + TAGS[s.when] + "</span>";
+        b.children[1].textContent = s.title;
+        b.addEventListener("click", () => {
+          select(i);
+          if (innerWidth <= 980 && stage.getBoundingClientRect().top < 0) stage.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+        });
+        grp.appendChild(b);
+      });
+      q("groups").appendChild(grp);
+    });
+
+    function setPlayIcon() {
+      q("playPath").setAttribute("d", playing ? PAUSE : PLAY);
+      playBtn.setAttribute("aria-label", playing ? "Pause" : "Play");
+    }
+    function setTour(v) { tour = v; tourBtn.setAttribute("aria-pressed", String(v)); tourBtn.textContent = v ? "Stop" : "Present all"; }
+
+    function select(i) {
+      cur = (i + scenes.length) % scenes.length;
+      const s = scenes[cur];
+      if (reduced && !tour) { playing = false; t = s.poster; } else { playing = true; t = 0; }
+      hold = 0; me.snap = true; yaw = 0; pitch = 0; beatIdx = -1;
+      const th = THEMES[s.theme];
+      q("iTheme").textContent = th.name; q("iTheme").style.color = th.color;
+      q("iWhen").textContent = TAGS[s.when]; q("iWhen").className = "w iWhen w" + s.when;
+      q("iCount").textContent = cur + 1 + " of " + scenes.length;
+      q("iTitle").textContent = s.title; q("iWhat").textContent = s.what; q("iWhy").textContent = s.why;
+      stage.setAttribute("aria-label", "Animated 3D scene: " + s.title + ". " + s.what);
+      root.querySelectorAll(".feat").forEach((b) => b.setAttribute("aria-current", String(+b.dataset.i === cur)));
+      scrub.value = Math.round((t / s.dur) * 1000);
+      setPlayIcon();
+      if (gl) buildScene(s);
+    }
+    me.step = (d) => select(cur + d);
+    me.toggle = () => playBtn.click();
+
+    root.addEventListener("pointerdown", () => { active = me; });
+    root.addEventListener("focusin", () => { active = me; });
+    q("bPrev").addEventListener("click", () => select(cur - 1));
+    q("bNext").addEventListener("click", () => select(cur + 1));
+    playBtn.addEventListener("click", () => {
+      if (!playing && t >= scenes[cur].dur) t = 0;
+      playing = !playing; hold = 0; setPlayIcon();
+    });
+    scrub.addEventListener("input", () => { t = (scrub.value / 1000) * scenes[cur].dur; playing = false; me.snap = true; setPlayIcon(); });
+    tourBtn.addEventListener("click", () => {
+      setTour(!tour);
+      if (tour) { select(cur); if (stage.getBoundingClientRect().top < 0) stage.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }); }
+    });
+
+    /* 3D stage */
+    let gl = false, renderer, scene, hemi, sun, rim, cam, W = 1, H = 1, visible = false, hintTimer = 0;
+    try {
+      if (!window.THREE) throw new Error("three.js did not load");
+      renderer = new THREE.WebGLRenderer({ canvas: q("gl"), antialias: true });
+      gl = true;
+    } catch (err) {
+      q("fallback").hidden = false; hint.hidden = true;
+    }
+
+    function applyEnv(env) {
+      const night = env === "night";
+      hemi.intensity = night ? 0.16 : 0.85;
+      sun.intensity = night ? 0.12 : 0.95;
+      rim.intensity = night ? 0.25 : 0.35;
+      scene.background.set(night ? "#04050c" : BG);
+      scene.fog.color.set(night ? "#04050c" : BG);
+    }
+    function buildScene(s) {
+      if (sceneRoot) {
+        scene.remove(sceneRoot);
+        sceneRoot.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) [].concat(o.material).forEach((m) => m.dispose()); });
+      }
+      me.labelMap.forEach((el) => el.remove()); me.labelMap.clear();
+      sceneRoot = new THREE.Group(); scene.add(sceneRoot);
+      camera = cam; snap = true;
+      update = s.build(sceneRoot);
+      applyEnv(s.env);
+    }
+
+    const look = gl ? new THREE.Vector3() : null, off = gl ? new THREE.Vector3() : null, pv = gl ? new THREE.Vector3() : null;
+    function placeCam(s) {
+      const c = typeof s.cam === "function" ? s.cam(t) : s.cam;
+      look.set(c.l[0], c.l[1], c.l[2]);
+      off.set(c.p[0] - c.l[0], c.p[1] - c.l[1], c.p[2] - c.l[2]);
+      const base = off.length(), r = base * Math.pow(Math.max(1, (16 / 9) / cam.aspect), 0.8);
+      const az = Math.atan2(off.x, off.z) + yaw, el = clamp(Math.asin(off.y / base) + pitch, 0.1, 1.35);
+      cam.position.set(look.x + r * Math.cos(el) * Math.sin(az), look.y + r * Math.sin(el), look.z + r * Math.cos(el) * Math.cos(az));
+      cam.lookAt(look); cam.updateMatrixWorld();
+      sun.position.set(look.x - 5, 10, look.z + 6); sun.target.position.copy(look); sun.target.updateMatrixWorld();
+    }
+    function flushOverlays(s) {
+      me.labelMap.forEach((el, id) => {
+        if (!me.touched.has(id)) { el.hidden = true; return; }
+        pv.copy(el._pos).project(cam);
+        if (pv.z > 1) { el.hidden = true; return; }
+        el.hidden = false;
+        const hw = el.offsetWidth / 2 + 6, x = clamp((pv.x + 1) / 2 * W, hw, Math.max(hw, W - hw));
+        el.style.transform = "translate(" + x.toFixed(1) + "px," + Math.max(el.offsetHeight + 12, (1 - pv.y) / 2 * H).toFixed(1) + "px) translate(-50%,-100%)";
+      });
+      if (me.sayText !== shownSay) {
+        shownSay = me.sayText; speechEl.hidden = shownSay === null; hint.hidden = shownSay !== null || !gl;
+        if (shownSay !== null) speechText.textContent = shownSay;
+      }
+      if (me.cardHtml !== shownCard) {
+        shownCard = me.cardHtml;
+        if (shownCard === null) cardEl.hidden = true; else { cardEl.innerHTML = shownCard; cardEl.hidden = false; }
+      }
+      let bi = 0; s.beats.forEach((b, i) => { if (t >= b[0]) bi = i; });
+      if (bi !== beatIdx) { beatIdx = bi; capStep.textContent = bi + 1 + "/" + s.beats.length; capText.textContent = s.beats[bi][1]; }
+    }
+
+    if (gl) {
+      renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(BG);
+      scene.fog = new THREE.Fog(BG, 16, 42);
+      cam = new THREE.PerspectiveCamera(40, 16 / 9, 0.1, 120);
+      hemi = new THREE.HemisphereLight(0xaac4ff, 0x1a1430, 0.85);
+      sun = new THREE.DirectionalLight(0xffffff, 0.95);
+      sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
+      Object.assign(sun.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 1, far: 40 });
+      sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.02;
+      rim = new THREE.DirectionalLight(0x6fe3ff, 0.35); rim.position.set(6, 4, -8);
+      scene.add(hemi, sun, sun.target, rim);
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), new THREE.MeshStandardMaterial({ color: "#0b0f22", roughness: 1 }));
+      ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+      const grid = new THREE.GridHelper(160, 160, 0x1a2148, 0x121838);
+      grid.position.y = 0.003; grid.material.transparent = true; grid.material.opacity = 0.6; scene.add(grid);
+
+      const resize = () => {
+        W = Math.max(1, stage.clientWidth); H = Math.max(1, stage.clientHeight);
+        renderer.setSize(W, H, false); cam.aspect = W / H; cam.updateProjectionMatrix();
+      };
+      new ResizeObserver(resize).observe(stage); resize();
+      // Each part only plays and draws while it is on screen
+      new IntersectionObserver((en) => {
+        visible = en[0].isIntersecting;
+        if (en[0].intersectionRatio >= 0.5) active = me;
+        if (visible && !hintTimer) hintTimer = setTimeout(() => { hint.style.opacity = 0; }, 6000);
+      }, { threshold: [0, 0.5] }).observe(stage);
+
+      let drag = null;
+      stage.addEventListener("pointerdown", (e) => {
+        drag = { x: e.clientX, y: e.clientY, yaw, pitch };
+        stage.setPointerCapture(e.pointerId); stage.classList.add("dragging"); hint.style.opacity = 0;
+      });
+      stage.addEventListener("pointermove", (e) => {
+        if (!drag) return;
+        yaw = drag.yaw - (e.clientX - drag.x) * 0.006;
+        pitch = clamp(drag.pitch + (e.clientY - drag.y) * 0.004, -0.35, 0.5);
+      });
+      const endDrag = () => { drag = null; stage.classList.remove("dragging"); };
+      stage.addEventListener("pointerup", endDrag);
+      stage.addEventListener("pointercancel", endDrag);
+      stage.addEventListener("dblclick", () => { yaw = 0; pitch = 0; });
+    }
+
+    me.tick = (dt) => {
+      if (!gl || !visible) return;
+      const s = scenes[cur];
+      if (playing) {
+        t += dt;
+        if (t >= s.dur) {
+          t = s.dur; hold += dt;
+          if (hold > (tour ? 1.2 : 1.8)) {
+            if (tour) {
+              if (cur < scenes.length - 1) { select(cur + 1); return; }
+              setTour(false); playing = false; setPlayIcon();
+            } else { t = 0; hold = 0; me.snap = true; }
+          }
+        }
+        scrub.value = Math.round((t / s.dur) * 1000);
+      }
+      ctx = me; camera = cam; snap = me.snap;
+      me.touched.clear(); me.cardHtml = null; me.sayText = null;
+      placeCam(s);
+      update(t, snap ? 1 : 1 - Math.exp(-dt * 9));
+      flushOverlays(s);
+      renderer.render(scene, cam);
+      me.snap = false;
+    };
+
+    select(0);
+    if (!gl) { capStep.textContent = ""; capText.textContent = ""; }
+    return me;
+  }
+
+  const theatres = document.querySelectorAll(".theatre");
+  const players = [
+    makePlayer(theatres[0], TODAY, [3, 4, 5], '<span class="w w3">Built</span>in the prototype now <span class="w w4">Optional</span>off by default <span class="w w5">In progress</span>being finished'),
+    makePlayer(theatres[1], NEXT, [0, 1, 2], '<span class="w w0">Soon</span>in months <span class="w w1">Next</span>in about a year <span class="w w2">Later</span>longer term'),
+  ];
+  active = players[0];
+
+  addEventListener("keydown", (e) => {
+    const tag = e.target.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || e.metaKey || e.ctrlKey || e.altKey || !active) return;
+    if (e.key === "ArrowRight") { active.step(1); e.preventDefault(); }
+    else if (e.key === "ArrowLeft") { active.step(-1); e.preventDefault(); }
+    else if (e.key === " " && tag !== "BUTTON" && tag !== "A") { active.toggle(); e.preventDefault(); }
+  });
+  document.querySelectorAll(".jump a").forEach((a) => a.addEventListener("click", (e) => {
+    const el = document.querySelector(a.getAttribute("href"));
+    if (el) { e.preventDefault(); el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }); }
+  }));
+
+  let last = performance.now();
+  const loop = (now) => {
+    requestAnimationFrame(loop);
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    players.forEach((p) => p.tick(dt));
+  };
+  requestAnimationFrame(loop);
+})();
+</script>
+<script>
+document.querySelector(".back").addEventListener("click", (e) => {
+  if (document.referrer.startsWith(location.origin) && history.length > 1) { e.preventDefault(); history.back(); }
+});
+</script>
+</body>
+</html>

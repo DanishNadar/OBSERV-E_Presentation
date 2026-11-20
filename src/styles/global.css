@@ -172,6 +172,10 @@ kbd { font-family: var(--mono); font-size: 15px; padding: 4px 10px; border-radiu
 .chip.amber { --chipc: var(--amber); } .chip.red { --chipc: var(--red); } .chip.green { --chipc: var(--green); }
 .chip.violet { --chipc: var(--violet); } .chip.magenta { --chipc: var(--magenta); }
 .chip:active { transform: translateY(1px) scale(0.98); }
+/* Link to the standalone 3D feature tour (public/features.html) */
+.tourLink { margin-top: 18px; text-decoration: none; font-size: 16px; padding: 8px 16px; }
+.tourRow { display: flex; align-items: center; gap: 24px; margin-top: 30px; }
+.tourRow .tourLink { margin-top: 0; flex: none; }
 
 .sliders { display: grid; gap: 14px; margin: 18px 0; }
 .sliderRow { display: grid; grid-template-columns: 220px 1fr 110px; gap: 16px; align-items: center; font-size: 18px; color: var(--dim); }
