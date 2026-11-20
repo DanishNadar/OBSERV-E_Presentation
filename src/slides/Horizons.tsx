@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 import { colors } from "../theme";
 import { Kicker } from "../components/ui";
 import { useMotion, motionVars } from "../lib/hooks";
@@ -69,9 +70,12 @@ export const Horizons = () => {
           </motion.div>
         ))}
       </div>
-      <p className="callout violet" style={{ marginTop: 30, fontSize: 20, maxWidth: "90ch" }}>
-        Each step ships only when it beats today’s pipeline on the same recorded walks.
-      </p>
+      <div className="tourRow">
+        <p className="callout violet" style={{ margin: 0, fontSize: 20, maxWidth: "90ch" }}>
+          Each step ships only when it beats today’s pipeline on the same recorded walks.
+        </p>
+        <a className="chip magenta tourLink" href="features.html#next">See future features as 3D scenes <ArrowRight size={20} /></a>
+      </div>
     </div>
   );
 };
